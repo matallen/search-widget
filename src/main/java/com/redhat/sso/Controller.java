@@ -46,7 +46,7 @@ public class Controller{
 //  }
   
   @GET
-  @Path("/search/grouped3")
+  @Path("/search/grouped2")
   public Response search2(@Context HttpServletRequest request) throws JsonGenerationException, JsonMappingException, IOException{
     String filter=request.getParameter("filter");
 //    String fields=request.getParameter("fields");
