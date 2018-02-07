@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -32,6 +33,7 @@ import mjson.Json;
 
 @Path("/")
 public class Controller{
+  private static final Logger log=Logger.getLogger(Controller.class);
 
 //  @GET
 //  @Path("/search/grouped")
@@ -173,6 +175,7 @@ public class Controller{
     String value=System.getenv("username");
     if (value==null) value=System.getProperty("username");
     if (value==null) System.out.println("ERROR: No username configured in environment or property variables");
+    if (value==null) log.error("ERROR: No username configured in environment or property variables");
     return value;
   }
 
@@ -180,6 +183,7 @@ public class Controller{
     String value=System.getenv("password");
     if (value==null) value=System.getProperty("password");
     if (value==null) System.out.println("ERROR: No password configured in environment or property variables");
+    if (value==null) log.error("ERROR: No password configured in environment or property variables");
     return value;
   }
 
@@ -280,7 +284,9 @@ public class Controller{
     
     new File("logs").mkdirs();
     String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=tag(" + commonTag + ")&fields=" + fields;
-
+    
+    log.debug("searchUrl = "+searchUrl);
+    
     
     List<Offering2> offerings=new ArrayList<Controller.Offering2>();
     try{
@@ -298,6 +304,8 @@ public class Controller{
       br.close();
       writeLog("logs/last-message-source.json", sb.toString());
       
+      log.debug("mojo returned "+sb.length()+" characters. The first 50 are: "+sb.substring(0, sb.length()<50?sb.length():50));
+      
       // manipulate json message. I decided to strip rather than include the fields I need. Perhaps include would be more bulletproof but this way was quick.
       Json x=mjson.Json.read(sb.toString());
       x=x.delAt("startIndex");
@@ -306,8 +314,12 @@ public class Controller{
       List<Document2> initial=new ArrayList<Controller.Document2>();
       
       int size=x.at("list").asJsonList().size();
+      log.debug("Found "+size+" documents");
       for(int i=0;i<size;i++){
         Json arrayItem=x.at("list").at(i);
+        
+        log.debug("adding document: "+arrayItem.at("subject").asString());
+        
         initial.add(new Document2(
             arrayItem.at("id").asString(),
             arrayItem.at("subject").asString(),
@@ -318,7 +330,6 @@ public class Controller{
             ));
       }
       
-      //attempt 2
       List<Document2> overviews=new ArrayList<Controller.Document2>();
       List<Document2> remove=new ArrayList<Controller.Document2>();
       for(Document2 d:initial){
