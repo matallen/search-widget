@@ -31,7 +31,7 @@ import org.jsoup.Jsoup;
 
 import mjson.Json;
 
-@Path("/")
+//@Path("/")
 public class Controller{
   private static final Logger log=Logger.getLogger(Controller.class);
 
@@ -47,8 +47,8 @@ public class Controller{
 //    return Response.status(200).header("Access-Control-Allow-Origin",  "*").header("Content-Type","application/json").entity(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(searchByGroup(filter, fields, "offering_"))).build();
 //  }
   
-  @GET
-  @Path("/search/grouped2")
+//  @GET
+//  @Path("/search/grouped2")
   public Response search2(@Context HttpServletRequest request) throws JsonGenerationException, JsonMappingException, IOException{
     String filter=request.getParameter("filter");
 //    String fields=request.getParameter("fields");

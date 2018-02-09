@@ -191,7 +191,8 @@ d.trigger("activate.bs.scrollspy")},b.prototype.clear=function(){a(this.selector
 $(document).ready(function() {
     $('#example').DataTable( {
         "ajax": {
-            "url": "https://solutiontools.co.uk:8443/search-widget/api/search/grouped2?filter=sso_searchable",
+            "url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search/grouped2?filter=sso_searchable",
+            //"url": "https://solutiontools.co.uk:8443/search-widget/api/search/grouped2?filter=sso_searchable",
             //"url": "http://localhost:8082/search-widget/api/search/grouped2?filter=sso_searchable",
             "dataSrc": ""
         },
@@ -233,22 +234,14 @@ $(document).ready(function() {
     } );
     
 
-    
-//var inputs=document.getElementsByTagName("input");
-//console.log("length="+inputs.length);
-//for(var i=0;i<inputs.length;i++){
-//  console.log("xxx="+inputs[i]);
-//}
-
-
 } );
 	
 	function displayList(list){
-		var result="";
+		var result="<ul>";
 		for (var i=0;i<list.length;i++){
-			result+=list[i]+"<br/>";
+			result+="<li>"+list[i]+"</li>";
 		}
-		return result;
+		return result+"</ul>";
 	}
 	
   function displayUrlNameList(list){
@@ -355,6 +348,9 @@ function checkit(value){
 		    
 		    
 		    <style>
+		    #example thead{
+		    	display: none;
+		    }
 				input{
 					border-radius: 25px;
 				  padding: 7px 14px;
