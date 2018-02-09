@@ -78,8 +78,6 @@ public class Controller{
 //    String result=new Controller().search("tag(offering_cloudforms)", "tags,subject,content");
 //    List<Offering> result=new Controller().searchByGroup("sso_searchable", "tags,subject,content", "offering_");
     
-    System.setProperty("username", "sa_offering_search");
-    System.setProperty("password", "RspvYYReEoo=");
     
     List<Offering2> result=new Controller().searchByGroup2("sso_searchable", "tags,subject,content", "offering_");
     
