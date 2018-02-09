@@ -128,12 +128,10 @@ public class Controller2{
         o.description=extractDescription(overview.description, "DESCRIPTION:");
         
 //        System.out.println("configs: "+truncate.size());
-        if (truncate.containsKey("offering")) o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering")));
-        if (truncate.containsKey("description")){
-          int oldLength=o.getDescription().length();
-          o.description=o.description.substring(0, Integer.parseInt(truncate.get("description")));
-//          System.out.println("truncating description: "+oldLength+"->"+o.description.length());
-        }
+        if (truncate.containsKey("offering"))
+          o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")));
+        if (truncate.containsKey("description"))
+          o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")));
         
         o.relatedProducts.addAll(extractProducts(overview.description, "PRODUCTS USED:"));
 //        o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
