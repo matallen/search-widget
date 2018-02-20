@@ -113,7 +113,7 @@ public class Controller2{
       List<Document> remove=new ArrayList<Document>();
       for(Document d:initial){
         // find all overview docs
-        if (d.tags.contains("offering_overview")){
+        if (d.tags.contains("doc_overview")){ // TODO: change to doc_overview
           overviews.add(d);
           remove.add(d);
         }
