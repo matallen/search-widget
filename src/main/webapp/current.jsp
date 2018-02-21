@@ -1,4 +1,5 @@
-<div style="height:350px;">   
+<base target="_parent">
+<div style="height:1000px;">   
 
    
 
@@ -191,8 +192,10 @@ d.trigger("activate.bs.scrollspy")},b.prototype.clear=function(){a(this.selector
 $(document).ready(function() {
     $('#example').DataTable( {
         "ajax": {
+            //"url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search?filter=sso_searchable",
+            "url": "http://localhost:8082/search-widget/api/search?filter=sso_searchable",
+            
             //"url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search/grouped2?filter=sso_searchable",
-            "url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search?filter=sso_searchable",
             //"url": "https://solutiontools.co.uk:8443/search-widget/api/search?filter=sso_searchable",
             //"url": "http://localhost:8082/search-widget/api/search/grouped2?filter=sso_searchable",
             "dataSrc": ""
@@ -215,7 +218,13 @@ $(document).ready(function() {
         	}},
         	{ "targets": 1, "render": function (data,type,row){
 	        	var list=row['relatedSolutions'];
-	        	return displayList(list);
+	        	//return displayList(list);
+      			var list=row["relatedSolutions"];
+      			var html="";
+      			for (var i=0;i<list.length;i++){
+        			html+="<a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a><br/>";
+      			}
+      			return html;
         	}},
         	{ "targets": 2, "render": function (data,type,row){
 	        	var list=row['relatedProducts'];
@@ -227,7 +236,7 @@ $(document).ready(function() {
       			for (var i=0;i<list.length;i++){
         			//html+="."; 
         			//html+=JSON.stringify(list[i]);
-        			html+="<a href='"+list[i].url+"'>"+list[i].name+"</a><br/>";
+        			html+="<a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a><br/>";
       			}
       			return html;
         	}}
@@ -331,6 +340,17 @@ function checkit(value){
   filterit(filter);
 }
 
+// TODO: THIS DOESNT WORK
+//var width = $(window).width() - 25; 
+//var height = $(window).height() - 25; 
+//$(".content-large").width(width);
+//$(".content-large").height(height);
+$(window).on("resize", function () {
+    $(".content-large").width( $(this).width() - 25 );
+    $(".content-large").height( $(this).height() - 25 );
+}).resize();
+
+
 </script>
 <!--
 <input type="checkbox" id="datasheet" name="datasheet" value="datasheet" onclick="checkit(' datasheet');"/><label for="datasheet">Datasheet</label>
@@ -340,8 +360,8 @@ function checkit(value){
 		        <thead>
 		            <tr>
 		                <th align="left">Offering</th>
-		                <th align="left">Related Solutions</th>
-		                <th align="left">Related Products</th>
+		                <th align="left">Related&nbsp;Solutions</th>
+		                <th align="left">Related&nbsp;Products</th>
 		                <th align="left">Documents</th>
 		            </tr>
 		        </thead>
@@ -352,11 +372,21 @@ function checkit(value){
 		    #example thead{
 		    	/*display: none;*/
 		    }
+		    #example thead tr th{
+		    	background-color: grey;
+		    	color: white;
+		    }
 		    .odd{
 		      background-color: #EFEFEF;
 		    }
 		    .offeringColumn{
-		    	width: 60%;
+		    	width: 50%;
+		    }
+		    .relatedSolutionsColumn{
+		      width: 15%;
+		    }
+		    .relatedProductsColumn{
+		      width: 15%;
 		    }
 		    .documentsColumn{
 		    	width: 10%;

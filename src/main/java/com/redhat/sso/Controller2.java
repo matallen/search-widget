@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import org.jsoup.Jsoup;
 
 import com.redhat.sso.model.Document;
 import com.redhat.sso.model.Offering;
+import com.redhat.sso.model.Solution;
 import com.redhat.sso.utils.StrParse;
 
 import mjson.Json;
@@ -41,8 +43,8 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
-    System.setProperty("username", "xxxxxxxx");
-    System.setProperty("password", "xxxxxxxx");
+    System.setProperty("username", "sa_offering_search");
+    System.setProperty("password", "RspvYYReEoo=");
     List<Offering> result=new Controller2().searchByGroup2("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
@@ -51,13 +53,14 @@ public class Controller2{
   @Path("/search")
   public Response search2(@Context HttpServletRequest request) throws JsonGenerationException, JsonMappingException, IOException{
     String filter=request.getParameter("filter");
+    String groupBy=null==request.getParameter("groupBy")?"offering_":request.getParameter("groupBy");
     String fields="tags,subject,content";
     return Response.status(200)
         .header("Access-Control-Allow-Origin",  "*")
         .header("Content-Type","application/json")
         .header("Cache-Control", "no-store, must-revalidate, no-cache, max-age=0")
         .header("Pragma", "no-cache")
-        .entity(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(searchByGroup2(filter, fields, "offering_")))
+        .entity(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(searchByGroup2(filter, fields, groupBy)))
         .build();
   }
   
@@ -133,9 +136,9 @@ public class Controller2{
         if (truncate.containsKey("description"))
           o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")));
         
-        o.relatedProducts.addAll(extractProducts(overview.description, "PRODUCTS USED:"));
+        o.relatedProducts.addAll(extractHtmlList(overview.description, "PRODUCTS USED:"));
 //        o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
-        o.relatedSolutions.add("TODO");
+        o.relatedSolutions.addAll(extractSolutions(overview.description, "RELATED SOLUTIONS:"));
         
         overview.name=StrParse.get(overview.name).leftOf("-").trim();
         overview.description="";
@@ -225,8 +228,10 @@ public class Controller2{
     
     return Jsoup.parse(description).text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
   }
-  private List<String> extractProducts(String descriptionHtml, String token){
+  private List<String> extractHtmlList(String descriptionHtml, String token){
     int iDesc=descriptionHtml.indexOf(token);
+    if (iDesc<0) return Arrays.asList("NOT FOUND: \""+token+"\""); //abort early if the header token is not in the document
+    
     int ulStart=descriptionHtml.indexOf("ul", iDesc);
     int ulEnd=descriptionHtml.indexOf("/ul", ulStart);
     
@@ -237,14 +242,58 @@ public class Controller2{
     
     //loop
     int end=0;
-    int start=ul.indexOf("<li>", end);
+    int start=ul.indexOf("<li", end);
     while (start>0){
       end=ul.indexOf("</li>", start);
-      String item=Jsoup.parse(ul.substring(start, end)).text().toString().trim();
+      String li=ul.substring(start, end);
+      String item;
+      if (li.indexOf("<a ")>=0){
+        int hrefStart=li.indexOf("href=")+"href=".length()+1;
+        String url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
+        item="<a href=\""+url+"\">"+Jsoup.parse(li).text().toString().trim()+"</a>";
+      }else{
+        item=Jsoup.parse(li).text().toString().trim();  
+      }
+//        li=li.substring(li.indexOf("<a "), li.indexOf("</a>")+"</a>".length()); // strip everything except for a link if it exists
+//      String item=Jsoup.parse(li).text().toString().trim();
       result.add(item);
-      start=ul.indexOf("<li>", end);
+      start=ul.indexOf("<li", end);
     }
     
+    return result;
+  }
+  
+  private List<Solution> extractSolutions(String descriptionHtml, String token){
+    int iDesc=descriptionHtml.indexOf(token);
+    if (iDesc<0) return Arrays.asList(new Solution("NOT FOUND: \""+token+"\"", null)); //abort early if the header token is not in the document
+    
+    int ulStart=descriptionHtml.indexOf("ul", iDesc);
+    int ulEnd=descriptionHtml.indexOf("/ul", ulStart);
+    
+    String ul=descriptionHtml.substring(ulStart, ulEnd);
+    // now just split by <li>
+    
+    List<Solution> result=new ArrayList<Solution>();
+    
+    //loop
+    int end=0;
+    int start=ul.indexOf("<li", end);
+    while (start>0){
+      end=ul.indexOf("</li>", start);
+      String li=ul.substring(start, end);
+      String name="";
+      String url=null;
+      if (li.indexOf("<a ")>=0){
+        int hrefStart=li.indexOf("href=")+"href=".length()+1;
+        url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
+//        item="<a href=\""+url+"\">"+Jsoup.parse(li).text().toString().trim()+"</a>";
+      }
+      name=Jsoup.parse(li).text().toString().trim();  
+//        li=li.substring(li.indexOf("<a "), li.indexOf("</a>")+"</a>".length()); // strip everything except for a link if it exists
+//      String item=Jsoup.parse(li).text().toString().trim();
+      result.add(new Solution(name, url));
+      start=ul.indexOf("<li", end);
+    }
     
     return result;
   }
