@@ -1,5 +1,5 @@
 <base target="_parent">
-<div style="height:1000px;">   
+<div style="height:1300px;">   
 
    
 
@@ -192,8 +192,8 @@ d.trigger("activate.bs.scrollspy")},b.prototype.clear=function(){a(this.selector
 $(document).ready(function() {
     $('#example').DataTable( {
         "ajax": {
-            //"url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search?filter=sso_searchable",
-            "url": "http://localhost:8082/search-widget/api/search?filter=sso_searchable",
+            "url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search?filter=sso_searchable",
+            //"url": "http://localhost:8082/search-widget/api/search?filter=sso_searchable",
             
             //"url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search/grouped2?filter=sso_searchable",
             //"url": "https://solutiontools.co.uk:8443/search-widget/api/search?filter=sso_searchable",
@@ -220,11 +220,15 @@ $(document).ready(function() {
 	        	var list=row['relatedSolutions'];
 	        	//return displayList(list);
       			var list=row["relatedSolutions"];
-      			var html="";
+      			var html="<ul>";
       			for (var i=0;i<list.length;i++){
-        			html+="<a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a><br/>";
+      			  if (list[i].url==undefined){
+      			  	html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>"
+      			  }else{
+	        			html+="<li><a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
+      			  }
       			}
-      			return html;
+      			return html+"</ul>";
         	}},
         	{ "targets": 2, "render": function (data,type,row){
 	        	var list=row['relatedProducts'];
@@ -232,13 +236,13 @@ $(document).ready(function() {
         	}},
         	{ "targets": 3, "render": function (data,type,row){
       			var list=row["documents"];
-      			var html="";
+      			var html="<ul>";
       			for (var i=0;i<list.length;i++){
-        			//html+="."; 
+        			//html+=".";
         			//html+=JSON.stringify(list[i]);
-        			html+="<a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a><br/>";
+        			html+="<li><a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
       			}
-      			return html;
+      			return html+"</ul>";
         	}}
         ]
     } );
@@ -358,7 +362,7 @@ $(window).on("resize", function () {
 -->
   <table id="example" class="display" cellspacing="0" width="100%">
 		        <thead>
-		            <tr>
+		            <tr class="headerRow">
 		                <th align="left">Offering</th>
 		                <th align="left">Related&nbsp;Solutions</th>
 		                <th align="left">Related&nbsp;Products</th>
@@ -369,17 +373,43 @@ $(window).on("resize", function () {
 		    
 		    
 		    <style>
-		    #example thead{
-		    	/*display: none;*/
+		    #example thead tr th:hover{
+		    	color: #ddd;
 		    }
+		    .even td a{
+		    	border:1px solid white;
+		    }
+		    .odd td a{
+		    	border:1px solid #eee;
+		    }
+		    a{
+		    	text-decoration: underline;
+		    	border-radius:3px;
+		    	padding:2px;
+		    	color: #333;
+		    	padding: 2px;
+		    }
+		    a:hover{
+		    	text-decoration: none;
+		    	border:1px solid black;
+		    	border-radius:3px;
+		    	padding:2px;
+		    	color: #666;
+		    }
+		    
 		    #example thead tr th{
-		    	background-color: grey;
+		    	padding: 10px;
+		    	background-color: #bbb;
 		    	color: white;
+		    	border: 1px solid grey;
 		    }
 		    .odd{
 		      background-color: #EFEFEF;
 		    }
-		    .offeringColumn{
+		    .headerRow th:hover{cursor: hand;}
+		    .offeringColumn {
+		      border-top-left-radius: 4px;
+		      border-bottom-left-radius: 4px;
 		    	width: 50%;
 		    }
 		    .relatedSolutionsColumn{
@@ -388,8 +418,14 @@ $(window).on("resize", function () {
 		    .relatedProductsColumn{
 		      width: 15%;
 		    }
+		    #example tbody tr td ul li{
+		      list-style-type: none;
+		      padding: 1px;
+		    }
 		    .documentsColumn{
 		    	width: 10%;
+		      border-top-right-radius: 4px;
+		      border-bottom-right-radius: 4px;
 		    }
 				input{
 					border-radius: 25px;
@@ -404,6 +440,7 @@ $(window).on("resize", function () {
 		    #example tbody tr td{
 		    	vertical-align:top;
 		    	font-family: Arial;
+		    	padding:7px;
 		    }
 		    #example_filter{
 		      float: left;

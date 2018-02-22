@@ -43,8 +43,8 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
-    System.setProperty("username", "sa_offering_search");
-    System.setProperty("password", "RspvYYReEoo=");
+    System.setProperty("username", "redacted");
+    System.setProperty("password", "redacted");
     List<Offering> result=new Controller2().searchByGroup2("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
@@ -265,7 +265,7 @@ public class Controller2{
   
   private List<Solution> extractSolutions(String descriptionHtml, String token){
     int iDesc=descriptionHtml.indexOf(token);
-    if (iDesc<0) return Arrays.asList(new Solution("NOT FOUND: \""+token+"\"", null)); //abort early if the header token is not in the document
+    if (iDesc<0) return Arrays.asList(new Solution("MISSING: \""+token+"\"", null)); //abort early if the header token is not in the document
     
     int ulStart=descriptionHtml.indexOf("ul", iDesc);
     int ulEnd=descriptionHtml.indexOf("/ul", ulStart);
