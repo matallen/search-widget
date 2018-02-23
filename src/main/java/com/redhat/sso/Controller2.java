@@ -2,6 +2,7 @@ package com.redhat.sso;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,8 +44,8 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
-    System.setProperty("username", "redacted");
-    System.setProperty("password", "redacted");
+    System.setProperty("username", "sa_offering_search");
+    System.setProperty("password", "RspvYYReEoo=");
     List<Offering> result=new Controller2().searchByGroup2("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
@@ -74,11 +75,24 @@ public class Controller2{
     System.out.println("Saving config: "+action+" "+field+" substring("+value+")");
     return Response.status(200).build();
   }
+  
+  @GET
+  @Path("/lastMessage")
+  public Response lastMessage(@Context HttpServletRequest request) throws JsonGenerationException, JsonMappingException, IOException{
+    return Response.status(200)
+        .header("Access-Control-Allow-Origin",  "*")
+        .header("Content-Type","application/json")
+        .header("Cache-Control", "no-store, must-revalidate, no-cache, max-age=0")
+        .header("Pragma", "no-cache")
+        .entity(IOUtils.toString(new FileInputStream(new File("logs/last-message-source.json"))))
+        .build();
+  }
+  
 
   private List<Offering> searchByGroup2(String commonTag, String fields, String groupBy){
     
     new File("logs").mkdirs();
-    String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=tag(" + commonTag + ")&fields=" + fields;
+    String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=tag(" + commonTag + ")&fields=" + fields+"&count=100"; // 100 results is the max
     
     log.debug("searchUrl = "+searchUrl);
     
@@ -122,6 +136,7 @@ public class Controller2{
         }
       }
       for(Document d:remove) initial.remove(d); remove.clear();
+      log.debug(overviews.size() +" overview documents/offerings found");
       
       // Now we have a list of overviews, and a separate list (initial) for all other docs
       
