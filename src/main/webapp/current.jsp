@@ -192,8 +192,8 @@ d.trigger("activate.bs.scrollspy")},b.prototype.clear=function(){a(this.selector
 $(document).ready(function() {
     $('#example').DataTable( {
         "ajax": {
-            "url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search?filter=sso_searchable",
-            //"url": "http://localhost:8082/search-widget/api/search?filter=sso_searchable",
+            //"url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search?filter=sso_searchable",
+            "url": "http://localhost:8082/search-widget/api/search?filter=sso_searchable",
             
             //"url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search/grouped2?filter=sso_searchable",
             //"url": "https://solutiontools.co.uk:8443/search-widget/api/search?filter=sso_searchable",
@@ -418,6 +418,9 @@ $(window).on("resize", function () {
 		    .relatedProductsColumn{
 		      width: 15%;
 		    }
+		    
+		    
+		    .relatedSolutionsColumn ul{ padding: 0; } /* remove bullets and indent where bullet would be*/
 		    .relatedSolutionsColumn ul li{
 		      list-style-type: none;
 		      padding: 1px;
@@ -425,6 +428,7 @@ $(window).on("resize", function () {
 		    .relatedProductsColumn ul li{
 		      padding: 1px;
 		    }
+		    .documentsColumn ul{ padding: 0; } /* remove bullets and indent where bullet would be*/
 		    .documentsColumn ul li{
 		      list-style-type: none;
 		      padding: 1px;
@@ -434,6 +438,8 @@ $(window).on("resize", function () {
 		      border-top-right-radius: 4px;
 		      border-bottom-right-radius: 4px;
 		    }
+		    
+		    /* search box */
 				input{
 					border-radius: 25px;
 				  padding: 7px 14px;
@@ -449,12 +455,15 @@ $(window).on("resize", function () {
 		    	font-family: Arial;
 		    	padding:7px;
 		    }
+		    
+		    /*
 		    #example_filter{
 		      float: left;
 		    }
 		    #example_length{
 		      float: left;
 		    }
+		    */
 		    #example_wrapper{
 		      font-family: Arial;
 		    }

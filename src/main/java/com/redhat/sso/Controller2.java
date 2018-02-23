@@ -13,6 +13,8 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +91,15 @@ public class Controller2{
   }
   
 
+  private Integer priority(Document d){
+    if (d.name.toLowerCase().contains("offering page")) return 0;
+    if (d.name.toLowerCase().contains("definition")) return 1;
+    if (d.name.toLowerCase().contains("datasheet")) return 2;
+    if (d.name.toLowerCase().contains("slide")) return 3;
+    if (d.name.toLowerCase().contains("task")) return 4;
+    return 100+d.name.length();
+  }
+  
   private List<Offering> searchByGroup2(String commonTag, String fields, String groupBy){
     
     new File("logs").mkdirs();
@@ -176,6 +187,12 @@ public class Controller2{
           }
         }
         for(Document d:remove) initial.remove(d); remove.clear();
+        
+        // re-order the documents in alphabetical order
+        Collections.sort(o.documents, new Comparator<Document>(){
+          public int compare(Document o1, Document o2){
+            return priority(o1).compareTo(priority(o2));
+        }});
         
         offerings.add(o);
       }
