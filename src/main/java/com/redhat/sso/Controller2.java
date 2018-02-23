@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -48,7 +47,7 @@ public class Controller2{
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
     System.setProperty("username", "sa_offering_search");
     System.setProperty("password", "RspvYYReEoo=");
-    List<Offering> result=new Controller2().searchByGroup2("sso_searchable", "tags,subject,content", "offering_");
+    List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
 
@@ -63,7 +62,8 @@ public class Controller2{
         .header("Content-Type","application/json")
         .header("Cache-Control", "no-store, must-revalidate, no-cache, max-age=0")
         .header("Pragma", "no-cache")
-        .entity(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(searchByGroup2(filter, fields, groupBy)))
+        //.entity(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(searchByGroup2(filter, fields, groupBy)))
+        .entity(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(search(filter, fields, groupBy)))
         .build();
   }
   
@@ -90,7 +90,6 @@ public class Controller2{
         .build();
   }
   
-
   private Integer priority(Document d){
     if (d.name.toLowerCase().contains("offering page")) return 0;
     if (d.name.toLowerCase().contains("definition")) return 1;
@@ -100,111 +99,211 @@ public class Controller2{
     return 100+d.name.length();
   }
   
-  private List<Offering> searchByGroup2(String commonTag, String fields, String groupBy){
+  private List<Offering> search(String commonTag, String fields, String groupBy) throws IOException{
+    int max=100;
     
-    new File("logs").mkdirs();
-    String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=tag(" + commonTag + ")&fields=" + fields+"&count=100"; // 100 results is the max
+    String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=tag(" + commonTag + ")&fields=" + fields+"&count="+max;
     
-    log.debug("searchUrl = "+searchUrl);
+    List<Offering> allOfferings=new ArrayList<Offering>();
+    List<Document> alldocuments=new ArrayList<Document>();
     
-    
-    List<Offering> offerings=new ArrayList<Offering>();
-    try{
-      HttpsURLConnection cnn=(HttpsURLConnection)new URL(searchUrl).openConnection();
-      cnn.setRequestMethod("GET");
-      cnn.setDoOutput(true);
-      
-      login(cnn, getUsername(), getPassword());
-      
-      // read json message
-      StringBuffer sb=new StringBuffer(readAndLog("logs/last-message-source.json", cnn.getInputStream()));
-      
-      log.debug("mojo returned "+sb.length()+" characters. The first 50 are: "+sb.substring(0, sb.length()<50?sb.length():50));
-      
-      Json x=mjson.Json.read(sb.toString());
-      List<Document> initial=new ArrayList<Document>();
-      int size=x.at("list").asJsonList().size();
-      log.debug("Found "+size+" documents");
-      for(int i=0;i<size;i++){
-        Json arrayItem=x.at("list").at(i);
-        log.debug("adding document: "+arrayItem.at("subject").asString());
-        initial.add(new Document(
-            arrayItem.at("id").asString(),
-            arrayItem.at("subject").asString(),
-            arrayItem.at("content").at("text").asString(),
-            arrayItem.at("resources").at("html").at("ref").asString(),
-            arrayItem.at("tags").asList()
-            ));
+    Json response=callMojoApi(searchUrl);
+    alldocuments.addAll(getDocuments(response));
+    while (null!=getNext(response)){
+      response=callMojoApi(getNext(response));
+      alldocuments.addAll(getDocuments(response));
+    }
+    allOfferings.addAll(aggregateIntoOfferings(alldocuments, groupBy));
+    return allOfferings;
+  }
+  
+  private String getNext(Json response){
+    if (response.has("links")){
+      if (response.at("links").has("next")){
+        return response.at("links").at("next").asString();
       }
+    }
+    return null;
+  }
+  
+  private List<Document> getDocuments(Json json){
+    List<Document> result=new ArrayList<Document>();
+    int size=json.at("list").asJsonList().size();
+    log.debug("Found "+size+" documents");
+    for(int i=0;i<size;i++){
+      Json arrayItem=json.at("list").at(i);
+      log.debug("adding document: "+arrayItem.at("subject").asString());
+      result.add(new Document(
+          arrayItem.at("id").asString(),
+          arrayItem.at("subject").asString(),
+          arrayItem.at("content").at("text").asString(),
+          arrayItem.at("resources").at("html").at("ref").asString(),
+          arrayItem.at("tags").asList()
+          ));
+    }
+    return result;
+  }
+  
+  private List<Offering> aggregateIntoOfferings(List<Document> alldocuments, String groupBy){
+    List<Offering> offerings=new ArrayList<Offering>();
+    
+    List<Document> overviews=new ArrayList<Document>();
+    List<Document> remove=new ArrayList<Document>();
+    for(Document d:alldocuments){
+      // find all overview docs
+      if (d.tags.contains("doc_overview")){ // TODO: change to doc_overview
+        overviews.add(d);
+        remove.add(d);
+      }
+    }
+    for(Document d:remove) alldocuments.remove(d); remove.clear();
+    log.debug(overviews.size() +" overview documents found");
+    
+    // Now we have a list of overviews, and a separate list (initial) for all other docs
+    
+    for(Document overview:overviews){
+      Offering o=new Offering();
+      o.offering=StrParse.get(overview.name).rightOf("-").trim();
+      o.description=extractDescription(overview.description, "DESCRIPTION:");
       
-      List<Document> overviews=new ArrayList<Document>();
-      List<Document> remove=new ArrayList<Document>();
-      for(Document d:initial){
-        // find all overview docs
-        if (d.tags.contains("doc_overview")){ // TODO: change to doc_overview
-          overviews.add(d);
+//      System.out.println("configs: "+truncate.size());
+      if (truncate.containsKey("offering"))
+        o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")));
+      if (truncate.containsKey("description"))
+        o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")));
+      
+      o.relatedProducts.addAll(extractHtmlList(overview.description, "PRODUCTS USED:"));
+//      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
+      o.relatedSolutions.addAll(extractSolutions(overview.description, "RELATED SOLUTIONS:"));
+      
+      overview.name=StrParse.get(overview.name).leftOf("-").trim();
+      overview.description="";
+      
+      o.documents.add(overview);
+      String groupTag="";
+      // find the offering tag to hunt down the related docs
+      for(String tag:overview.tags){
+        if (tag.startsWith(groupBy)){
+          groupTag=tag; break;
+        }
+      }
+      // find the related docs using the groupTag
+      for (Document d:alldocuments){
+        if (d.tags.contains(groupTag)){
+          d.name=StrParse.get(d.name).leftOf("-").trim();
+          d.description="";
+          o.documents.add(d);
           remove.add(d);
         }
       }
-      for(Document d:remove) initial.remove(d); remove.clear();
-      log.debug(overviews.size() +" overview documents/offerings found");
+      for(Document d:remove) alldocuments.remove(d); remove.clear();
       
-      // Now we have a list of overviews, and a separate list (initial) for all other docs
+      // re-order the documents in alphabetical order
+      Collections.sort(o.documents, new Comparator<Document>(){
+        public int compare(Document o1, Document o2){
+          return priority(o1).compareTo(priority(o2));
+      }});
       
-      for(Document overview:overviews){
-        Offering o=new Offering();
-        o.offering=StrParse.get(overview.name).rightOf("-").trim();
-        o.description=extractDescription(overview.description, "DESCRIPTION:");
-        
-//        System.out.println("configs: "+truncate.size());
-        if (truncate.containsKey("offering"))
-          o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")));
-        if (truncate.containsKey("description"))
-          o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")));
-        
-        o.relatedProducts.addAll(extractHtmlList(overview.description, "PRODUCTS USED:"));
-//        o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
-        o.relatedSolutions.addAll(extractSolutions(overview.description, "RELATED SOLUTIONS:"));
-        
-        overview.name=StrParse.get(overview.name).leftOf("-").trim();
-        overview.description="";
-        
-        o.documents.add(overview);
-        String groupTag="";
-        // find the offering tag to hunt down the related docs
-        for(String tag:overview.tags){
-          if (tag.startsWith(groupBy)){
-            groupTag=tag; break;
-          }
-        }
-        // find the related docs using the groupTag
-        for (Document d:initial){
-          if (d.tags.contains(groupTag)){
-            d.name=StrParse.get(d.name).leftOf("-").trim();
-            d.description="";
-            o.documents.add(d);
-            remove.add(d);
-          }
-        }
-        for(Document d:remove) initial.remove(d); remove.clear();
-        
-        // re-order the documents in alphabetical order
-        Collections.sort(o.documents, new Comparator<Document>(){
-          public int compare(Document o1, Document o2){
-            return priority(o1).compareTo(priority(o2));
-        }});
-        
-        offerings.add(o);
-      }
-      
-      return offerings;
-      
-    }catch (MalformedURLException e){
-      e.printStackTrace();
-    }catch (IOException e){
-      e.printStackTrace();
+      offerings.add(o);
     }
-    return null;
+    
+    log.debug("aggregated into "+offerings.size() +" offerings");
+    
+    return offerings;
+  }
+  
+//  private List<Offering> getOfferings(Json json, String groupBy){
+//    List<Offering> offerings=new ArrayList<Offering>();
+//    List<Document> initial=new ArrayList<Document>();
+//    int size=json.at("list").asJsonList().size();
+//    log.debug("Found "+size+" documents");
+//    for(int i=0;i<size;i++){
+//      Json arrayItem=json.at("list").at(i);
+//      log.debug("adding document: "+arrayItem.at("subject").asString());
+//      initial.add(new Document(
+//          arrayItem.at("id").asString(),
+//          arrayItem.at("subject").asString(),
+//          arrayItem.at("content").at("text").asString(),
+//          arrayItem.at("resources").at("html").at("ref").asString(),
+//          arrayItem.at("tags").asList()
+//          ));
+//    }
+//    
+//    List<Document> overviews=new ArrayList<Document>();
+//    List<Document> remove=new ArrayList<Document>();
+//    for(Document d:initial){
+//      // find all overview docs
+//      if (d.tags.contains("doc_overview")){ // TODO: change to doc_overview
+//        overviews.add(d);
+//        remove.add(d);
+//      }
+//    }
+//    for(Document d:remove) initial.remove(d); remove.clear();
+//    log.debug(overviews.size() +" overview documents/offerings found");
+//    
+//    // Now we have a list of overviews, and a separate list (initial) for all other docs
+//    
+//    for(Document overview:overviews){
+//      Offering o=new Offering();
+//      o.offering=StrParse.get(overview.name).rightOf("-").trim();
+//      o.description=extractDescription(overview.description, "DESCRIPTION:");
+//      
+////      System.out.println("configs: "+truncate.size());
+//      if (truncate.containsKey("offering"))
+//        o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")));
+//      if (truncate.containsKey("description"))
+//        o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")));
+//      
+//      o.relatedProducts.addAll(extractHtmlList(overview.description, "PRODUCTS USED:"));
+////      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
+//      o.relatedSolutions.addAll(extractSolutions(overview.description, "RELATED SOLUTIONS:"));
+//      
+//      overview.name=StrParse.get(overview.name).leftOf("-").trim();
+//      overview.description="";
+//      
+//      o.documents.add(overview);
+//      String groupTag="";
+//      // find the offering tag to hunt down the related docs
+//      for(String tag:overview.tags){
+//        if (tag.startsWith(groupBy)){
+//          groupTag=tag; break;
+//        }
+//      }
+//      // find the related docs using the groupTag
+//      for (Document d:initial){
+//        if (d.tags.contains(groupTag)){
+//          d.name=StrParse.get(d.name).leftOf("-").trim();
+//          d.description="";
+//          o.documents.add(d);
+//          remove.add(d);
+//        }
+//      }
+//      for(Document d:remove) initial.remove(d); remove.clear();
+//      
+//      // re-order the documents in alphabetical order
+//      Collections.sort(o.documents, new Comparator<Document>(){
+//        public int compare(Document o1, Document o2){
+//          return priority(o1).compareTo(priority(o2));
+//      }});
+//      
+//      offerings.add(o);
+//    }
+//    
+//    return offerings;
+//  }
+  
+  private Json callMojoApi(String searchUrl) throws IOException{
+//    String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=tag(" + commonTag + ")&fields=" + fields+"&count="+max;
+    log.debug("calling: "+searchUrl);
+    HttpsURLConnection cnn=(HttpsURLConnection)new URL(searchUrl).openConnection();
+    cnn.setRequestMethod("GET");
+    cnn.setDoOutput(true);
+    login(cnn, getUsername(), getPassword());
+    new File("logs").mkdirs();
+    StringBuffer sb=new StringBuffer(readAndLog("logs/last-message-source.json", cnn.getInputStream()));
+//    return sb.toString();
+    Json x=mjson.Json.read(sb.toString());
+    return x;
   }
   
   
@@ -260,6 +359,7 @@ public class Controller2{
     
     return Jsoup.parse(description).text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
   }
+  
   private List<String> extractHtmlList(String descriptionHtml, String token){
     int iDesc=descriptionHtml.indexOf(token);
     if (iDesc<0) return Arrays.asList("NOT FOUND: \""+token+"\""); //abort early if the header token is not in the document
