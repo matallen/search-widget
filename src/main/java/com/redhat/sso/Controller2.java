@@ -44,8 +44,8 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
-    System.setProperty("username", "sa_offering_search");
-    System.setProperty("password", "RspvYYReEoo=");
+    System.setProperty("username", "redacted");
+    System.setProperty("password", "redacted");
     List<Offering> result=new Controller2().searchByGroup2("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
