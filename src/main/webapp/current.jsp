@@ -208,8 +208,8 @@ $(document).ready(function() {
         "columns": [
             { "data": "offering", "className": "offeringColumn" },
             //{ "data": "description" },
-            { "data": "relatedProducts", "className": "relatedProductsColumn"},
             { "data": "relatedSolutions", "className": "relatedSolutionsColumn"},
+            { "data": "relatedProducts", "className": "relatedProductsColumn"},
             { "data": "documents", "className": "documentsColumn" }
         ],
         "columnDefs":[
@@ -418,7 +418,14 @@ $(window).on("resize", function () {
 		    .relatedProductsColumn{
 		      width: 15%;
 		    }
-		    #example tbody tr td ul li{
+		    .relatedSolutionsColumn ul li{
+		      list-style-type: none;
+		      padding: 1px;
+		    }
+		    .relatedProductsColumn ul li{
+		      padding: 1px;
+		    }
+		    .documentsColumn ul li{
 		      list-style-type: none;
 		      padding: 1px;
 		    }
