@@ -285,11 +285,11 @@ public class Controller2{
       return "DESCRIPTION NOT FOUND";
     }
     
-    int start=descriptionHtml.substring(0, iDesc).lastIndexOf("<h1>"); // find the last H1 before DESCRIPTION"
-    if (start==-1) start=descriptionHtml.substring(0, iDesc).lastIndexOf("<H1>"); // just in case it's uppercase
+    int start=descriptionHtml.substring(0, iDesc).lastIndexOf("<h1"); // find the last H1 before DESCRIPTION"
+    if (start==-1) start=descriptionHtml.substring(0, iDesc).lastIndexOf("<H1"); // just in case it's uppercase
     
-    int end=descriptionHtml.indexOf("<h1>", start+1); // find the next header h1 as the end point
-    if(end==-1) end=descriptionHtml.indexOf("<H1>", start+1); // just in case it's uppercase
+    int end=descriptionHtml.indexOf("<h1", start+1); // find the next header h1 as the end point
+    if(end==-1) end=descriptionHtml.indexOf("<H1", start+1); // just in case it's uppercase
     
     if (start<0 || end<0){
       return "Are you sure \""+token+"\" is within &lt;h1&gt; tags?";
