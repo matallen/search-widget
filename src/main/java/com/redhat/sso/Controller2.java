@@ -371,7 +371,7 @@ public class Controller2{
     if(end==-1) end=descriptionHtml.indexOf("<H1>", start+1); // just in case it's uppercase
     
     if (start<0 || end<0){
-      return "Are you sure \""+token+"\" is within <h1> tags?";
+      return "Are you sure \""+token+"\" is within &lt;h1&gt; tags?";
     }
     String description=descriptionHtml.substring(start, end); 
     
