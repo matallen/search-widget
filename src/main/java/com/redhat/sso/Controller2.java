@@ -164,7 +164,7 @@ public class Controller2{
     for(Document overview:overviews){
       Offering o=new Offering();
       o.offering=StrParse.get(overview.name).rightOf("-").trim();
-      o.description=extractDescription(overview, overview.description, "DESCRIPTION:");
+      o.description=extractDescription(overview, overview.description, new String[]{"DESCRIPTION:", "Description:"});
       
 //      System.out.println("configs: "+truncate.size());
       if (truncate.containsKey("offering"))
@@ -346,11 +346,21 @@ public class Controller2{
   }
 
   
-  private String extractDescription(Document src, String descriptionHtml, String token){
-    int iDesc=descriptionHtml.indexOf(token); //find DESCRIPTION
+  private String extractDescription(Document src, String descriptionHtml, String[] tokensInOrder){
+    String token=null;
+    int iDesc=-1;
+    for(String t:tokensInOrder){
+      if ((iDesc=descriptionHtml.indexOf(t))>=0){
+        token=t;
+        break;
+      }
+    }
+    
+//    int iDesc=descriptionHtml.indexOf(token); //find DESCRIPTION
+//    if (iDesc<0) descriptionHtml.indexOf(token); //find Description
     
     if (iDesc<0){
-      log.error("Unable to find \""+token+"\" in document: "+src.getUrl());
+      log.error("Unable to find \""+tokensInOrder+"\" in document: "+src.getUrl());
       return "DESCRIPTION NOT FOUND";
     }
     
@@ -360,6 +370,9 @@ public class Controller2{
     int end=descriptionHtml.indexOf("<h1>", start+1); // find the next header h1 as the end point
     if(end==-1) end=descriptionHtml.indexOf("<H1>", start+1); // just in case it's uppercase
     
+    if (start<0 || end<0){
+      return "Are you sure \""+token+"\" is within <h1> tags?";
+    }
     String description=descriptionHtml.substring(start, end); 
     
     return Jsoup.parse(description).text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
@@ -369,7 +382,7 @@ public class Controller2{
     int iDesc=descriptionHtml.indexOf(token);
     if (iDesc<0){
       log.error("Unable to find \""+token+"\" in document: "+src.getUrl());
-      return Arrays.asList("NOT FOUND: \""+token+"\""); //abort early if the header token is not in the document
+      return Arrays.asList("MISSING: \""+token+"\""); //abort early if the header token is not in the document
     }
     
     int ulStart=descriptionHtml.indexOf("ul", iDesc);
