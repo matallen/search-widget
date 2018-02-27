@@ -172,9 +172,9 @@ public class Controller2{
       if (truncate.containsKey("description"))
         o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")));
       
-      o.relatedProducts.addAll(extractHtmlList(overview, overview.description, "PRODUCTS USED:"));
+      o.relatedProducts.addAll(extractHtmlList(overview, overview.description, new String[]{"PRODUCTS &amp; TRAINING:","Products &amp; Training:", "PRODUCTS USED:"}));
 //      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
-      o.relatedSolutions.addAll(extractSolutions(overview, overview.description, "RELATED SOLUTIONS:"));
+      o.relatedSolutions.addAll(extractSolutions(overview, overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
       
       overview.name=StrParse.get(overview.name).leftOf("-").trim();
       overview.description="";
@@ -212,85 +212,6 @@ public class Controller2{
     return offerings;
   }
   
-//  private List<Offering> getOfferings(Json json, String groupBy){
-//    List<Offering> offerings=new ArrayList<Offering>();
-//    List<Document> initial=new ArrayList<Document>();
-//    int size=json.at("list").asJsonList().size();
-//    log.debug("Found "+size+" documents");
-//    for(int i=0;i<size;i++){
-//      Json arrayItem=json.at("list").at(i);
-//      log.debug("adding document: "+arrayItem.at("subject").asString());
-//      initial.add(new Document(
-//          arrayItem.at("id").asString(),
-//          arrayItem.at("subject").asString(),
-//          arrayItem.at("content").at("text").asString(),
-//          arrayItem.at("resources").at("html").at("ref").asString(),
-//          arrayItem.at("tags").asList()
-//          ));
-//    }
-//    
-//    List<Document> overviews=new ArrayList<Document>();
-//    List<Document> remove=new ArrayList<Document>();
-//    for(Document d:initial){
-//      // find all overview docs
-//      if (d.tags.contains("doc_overview")){ // TODO: change to doc_overview
-//        overviews.add(d);
-//        remove.add(d);
-//      }
-//    }
-//    for(Document d:remove) initial.remove(d); remove.clear();
-//    log.debug(overviews.size() +" overview documents/offerings found");
-//    
-//    // Now we have a list of overviews, and a separate list (initial) for all other docs
-//    
-//    for(Document overview:overviews){
-//      Offering o=new Offering();
-//      o.offering=StrParse.get(overview.name).rightOf("-").trim();
-//      o.description=extractDescription(overview.description, "DESCRIPTION:");
-//      
-////      System.out.println("configs: "+truncate.size());
-//      if (truncate.containsKey("offering"))
-//        o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")));
-//      if (truncate.containsKey("description"))
-//        o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")));
-//      
-//      o.relatedProducts.addAll(extractHtmlList(overview.description, "PRODUCTS USED:"));
-////      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
-//      o.relatedSolutions.addAll(extractSolutions(overview.description, "RELATED SOLUTIONS:"));
-//      
-//      overview.name=StrParse.get(overview.name).leftOf("-").trim();
-//      overview.description="";
-//      
-//      o.documents.add(overview);
-//      String groupTag="";
-//      // find the offering tag to hunt down the related docs
-//      for(String tag:overview.tags){
-//        if (tag.startsWith(groupBy)){
-//          groupTag=tag; break;
-//        }
-//      }
-//      // find the related docs using the groupTag
-//      for (Document d:initial){
-//        if (d.tags.contains(groupTag)){
-//          d.name=StrParse.get(d.name).leftOf("-").trim();
-//          d.description="";
-//          o.documents.add(d);
-//          remove.add(d);
-//        }
-//      }
-//      for(Document d:remove) initial.remove(d); remove.clear();
-//      
-//      // re-order the documents in alphabetical order
-//      Collections.sort(o.documents, new Comparator<Document>(){
-//        public int compare(Document o1, Document o2){
-//          return priority(o1).compareTo(priority(o2));
-//      }});
-//      
-//      offerings.add(o);
-//    }
-//    
-//    return offerings;
-//  }
   
   private Json callMojoApi(String searchUrl) throws IOException{
 //    String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=tag(" + commonTag + ")&fields=" + fields+"&count="+max;
@@ -360,7 +281,7 @@ public class Controller2{
 //    if (iDesc<0) descriptionHtml.indexOf(token); //find Description
     
     if (iDesc<0){
-      log.error("Unable to find \""+tokensInOrder+"\" in document: "+src.getUrl());
+      log.error("Unable to find \""+arrayToString(tokensInOrder)+"\" in document: "+src.getUrl());
       return "DESCRIPTION NOT FOUND";
     }
     
@@ -378,10 +299,25 @@ public class Controller2{
     return Jsoup.parse(description).text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
   }
   
-  private List<String> extractHtmlList(Document src, String descriptionHtml, String token){
-    int iDesc=descriptionHtml.indexOf(token);
+  private String arrayToString(String[] a){
+    StringBuffer sb=new StringBuffer();
+    for(String s:a)
+      sb.append(s).append(", ");
+    return sb.substring(0, sb.length()>2?sb.length()-2:0);
+  }
+  private List<String> extractHtmlList(Document src, String descriptionHtml, String[] tokensInOrder){
+    String token=null;
+    int iDesc=-1;
+    for(String t:tokensInOrder){
+      if ((iDesc=descriptionHtml.indexOf(t))>=0){
+        token=t;
+        break;
+      }
+    }
+    
+//    int iDesc=descriptionHtml.indexOf(token);
     if (iDesc<0){
-      log.error("Unable to find \""+token+"\" in document: "+src.getUrl());
+      log.error("Unable to find any \""+arrayToString(tokensInOrder)+"\" in document: "+src.getUrl());
       return Arrays.asList("MISSING: \""+token+"\""); //abort early if the header token is not in the document
     }
     
@@ -416,10 +352,19 @@ public class Controller2{
     return result;
   }
   
-  private List<Solution> extractSolutions(Document src, String descriptionHtml, String token){
-    int iDesc=descriptionHtml.indexOf(token);
+  private List<Solution> extractSolutions(Document src, String descriptionHtml, String[] tokensInOrder){
+    String token=null;
+    int iDesc=-1;
+    for(String t:tokensInOrder){
+      if ((iDesc=descriptionHtml.indexOf(t))>=0){
+        token=t;
+        break;
+      }
+    }
+    
+//    int iDesc=descriptionHtml.indexOf(token);
     if (iDesc<0){
-      log.error("Unable to find \""+token+"\" in document: "+src.getUrl());
+      log.error("Unable to find \""+arrayToString(tokensInOrder)+"\" in document: "+src.getUrl());
       return Arrays.asList(new Solution("MISSING: \""+token+"\"", null)); //abort early if the header token is not in the document
     }
     
