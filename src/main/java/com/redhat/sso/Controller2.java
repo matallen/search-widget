@@ -45,8 +45,8 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
-    System.setProperty("username", "redacted");
-    System.setProperty("password", "redacted");
+    System.setProperty("username", "sa_offering_search");
+    System.setProperty("password", "RspvYYReEoo=");
     List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
@@ -164,7 +164,7 @@ public class Controller2{
     for(Document overview:overviews){
       Offering o=new Offering();
       o.offering=StrParse.get(overview.name).rightOf("-").trim();
-      o.description=extractDescription(overview.description, "DESCRIPTION:");
+      o.description=extractDescription(overview, overview.description, "DESCRIPTION:");
       
 //      System.out.println("configs: "+truncate.size());
       if (truncate.containsKey("offering"))
@@ -172,9 +172,9 @@ public class Controller2{
       if (truncate.containsKey("description"))
         o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")));
       
-      o.relatedProducts.addAll(extractHtmlList(overview.description, "PRODUCTS USED:"));
+      o.relatedProducts.addAll(extractHtmlList(overview, overview.description, "PRODUCTS USED:"));
 //      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
-      o.relatedSolutions.addAll(extractSolutions(overview.description, "RELATED SOLUTIONS:"));
+      o.relatedSolutions.addAll(extractSolutions(overview, overview.description, "RELATED SOLUTIONS:"));
       
       overview.name=StrParse.get(overview.name).leftOf("-").trim();
       overview.description="";
@@ -346,8 +346,13 @@ public class Controller2{
   }
 
   
-  private String extractDescription(String descriptionHtml, String token){
+  private String extractDescription(Document src, String descriptionHtml, String token){
     int iDesc=descriptionHtml.indexOf(token); //find DESCRIPTION
+    
+    if (iDesc<0){
+      log.error("Unable to find \""+token+"\" in document: "+src.getUrl());
+      return "DESCRIPTION NOT FOUND";
+    }
     
     int start=descriptionHtml.substring(0, iDesc).lastIndexOf("<h1>"); // find the last H1 before DESCRIPTION"
     if (start==-1) start=descriptionHtml.substring(0, iDesc).lastIndexOf("<H1>"); // just in case it's uppercase
@@ -360,9 +365,12 @@ public class Controller2{
     return Jsoup.parse(description).text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
   }
   
-  private List<String> extractHtmlList(String descriptionHtml, String token){
+  private List<String> extractHtmlList(Document src, String descriptionHtml, String token){
     int iDesc=descriptionHtml.indexOf(token);
-    if (iDesc<0) return Arrays.asList("NOT FOUND: \""+token+"\""); //abort early if the header token is not in the document
+    if (iDesc<0){
+      log.error("Unable to find \""+token+"\" in document: "+src.getUrl());
+      return Arrays.asList("NOT FOUND: \""+token+"\""); //abort early if the header token is not in the document
+    }
     
     int ulStart=descriptionHtml.indexOf("ul", iDesc);
     int ulEnd=descriptionHtml.indexOf("/ul", ulStart);
@@ -395,9 +403,12 @@ public class Controller2{
     return result;
   }
   
-  private List<Solution> extractSolutions(String descriptionHtml, String token){
+  private List<Solution> extractSolutions(Document src, String descriptionHtml, String token){
     int iDesc=descriptionHtml.indexOf(token);
-    if (iDesc<0) return Arrays.asList(new Solution("MISSING: \""+token+"\"", null)); //abort early if the header token is not in the document
+    if (iDesc<0){
+      log.error("Unable to find \""+token+"\" in document: "+src.getUrl());
+      return Arrays.asList(new Solution("MISSING: \""+token+"\"", null)); //abort early if the header token is not in the document
+    }
     
     int ulStart=descriptionHtml.indexOf("ul", iDesc);
     int ulEnd=descriptionHtml.indexOf("/ul", ulStart);
