@@ -20,8 +20,10 @@ public class Document{
     this.name=name;
     this.description=description;
     this.url=url;
-    this.tags=new ArrayList<String>();
-    for(Object tag:tags)
-      this.tags.add((String)tag);
+    if (null!=tags){
+      this.tags=new ArrayList<String>();
+      for(Object tag:tags)
+        this.tags.add((String)tag);
+    }
   }
 }

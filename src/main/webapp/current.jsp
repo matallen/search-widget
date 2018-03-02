@@ -200,10 +200,12 @@ $(document).ready(function() {
             //"url": "http://localhost:8082/search-widget/api/search/grouped2?filter=sso_searchable",
             "dataSrc": ""
         },
-        "scrollCollapse": false,
+        "scrollY":        "1300px",
+        "scrollCollapse": true,
+        
         "paging":         false,
         "lengthMenu": [[10, 25, 50, 100, 200, -1], [10, 25, 50, 100, 200, "All"]], // page entry options
-        "pageLength" : 10, // default page entries
+        "pageLength" : 5, // default page entries
         "info" : false,
         "columns": [
             { "data": "offering", "className": "offeringColumn" },
@@ -365,7 +367,7 @@ $(window).on("resize", function () {
 		            <tr class="headerRow">
 		                <th align="left">Offering</th>
 		                <th align="left">Related&nbsp;Solutions</th>
-		                <th align="left">Related&nbsp;Products</th>
+		                <th align="left">Related&nbsp;Products&nbsp;&amp;&nbsp;Training</th>
 		                <th align="left">Documents</th>
 		            </tr>
 		        </thead>
@@ -373,7 +375,7 @@ $(window).on("resize", function () {
 		    
 		    
 		    <style>
-		    #example thead tr th:hover{
+		    #example_wrapper thead tr th:hover{
 		    	color: #ddd;
 		    }
 		    .even td a{
@@ -397,7 +399,7 @@ $(window).on("resize", function () {
 		    	color: #666;
 		    }
 		    
-		    #example thead tr th{
+		    #example_wrapper thead tr th{
 		    	padding: 10px;
 		    	background-color: #bbb;
 		    	color: white;
@@ -450,7 +452,7 @@ $(window).on("resize", function () {
 				  color: #2e2e2e;
 				  margin-bottom: 5px;
 				}
-		    #example tbody tr td{
+		    #example_wrapper tbody tr td{
 		    	vertical-align:top;
 		    	font-family: Arial;
 		    	padding:7px;

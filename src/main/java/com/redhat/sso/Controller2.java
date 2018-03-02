@@ -45,8 +45,8 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
-    System.setProperty("username", "sa_offering_search");
-    System.setProperty("password", "RspvYYReEoo=");
+    System.setProperty("username", "redacted");
+    System.setProperty("password", "redacted");
     List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
@@ -167,14 +167,18 @@ public class Controller2{
       o.description=extractDescription(overview, overview.description, new String[]{"DESCRIPTION:", "Description:"});
       
 //      System.out.println("configs: "+truncate.size());
-      if (truncate.containsKey("offering"))
-        o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")));
-      if (truncate.containsKey("description"))
-        o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")));
+      if (truncate.containsKey("offering") && o.offering.length()>Integer.parseInt(truncate.get("offering")))
+        o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")))+"...";
+      
+      if (truncate.containsKey("description") && o.description.length()>Integer.parseInt(truncate.get("description")))
+        o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")))+"...";
       
       o.relatedProducts.addAll(extractHtmlList(overview, overview.description, new String[]{"PRODUCTS &amp; TRAINING:","Products &amp; Training:", "PRODUCTS USED:"}));
 //      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
       o.relatedSolutions.addAll(extractSolutions(overview, overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
+      
+      //now, if the overview has a "Related Documents" section, then append those links too
+      o.documents.addAll(extractOtherDocuments(overview, overview.description, new String[]{"OTHER MATERIALS:", "Other Materials:"}));
       
       overview.name=StrParse.get(overview.name).leftOf("-").trim();
       overview.description="";
@@ -197,6 +201,9 @@ public class Controller2{
         }
       }
       for(Document d:remove) alldocuments.remove(d); remove.clear();
+      
+
+      
       
       // re-order the documents in alphabetical order
       Collections.sort(o.documents, new Comparator<Document>(){
@@ -393,6 +400,50 @@ public class Controller2{
 //        li=li.substring(li.indexOf("<a "), li.indexOf("</a>")+"</a>".length()); // strip everything except for a link if it exists
 //      String item=Jsoup.parse(li).text().toString().trim();
       result.add(new Solution(name, url));
+      start=ul.indexOf("<li", end);
+    }
+    
+    return result;
+  }
+  
+  
+  private List<Document> extractOtherDocuments(Document src, String html, String[] tokensInOrder){
+    String token=null;
+    int iDesc=-1;
+    for(String t:tokensInOrder){
+      if ((iDesc=html.indexOf(t))>=0){
+        token=t;
+        break;
+      }
+    }
+    
+    if (iDesc<0) return new ArrayList<Document>();
+    
+    int ulStart=html.indexOf("ul", iDesc);
+    int ulEnd=html.indexOf("/ul", ulStart);
+    
+    String ul=html.substring(ulStart, ulEnd);
+    
+    List<Document> result=new ArrayList<Document>();
+    
+    //loop
+    int end=0;
+    int start=ul.indexOf("<li", end);
+    while (start>0){
+      end=ul.indexOf("</li>", start);
+      String li=ul.substring(start, end);
+      String name="";
+      String url=null;
+      if (li.indexOf("<a ")>=0){
+        int hrefStart=li.indexOf("href=")+"href=".length()+1;
+        url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
+      }
+      name=Jsoup.parse(li).text().toString().trim();
+      
+      String id=null;
+      String description=null;
+      List<Object> tags=null;
+      result.add(new Document(id, name, description, url, tags));
       start=ul.indexOf("<li", end);
     }
     
