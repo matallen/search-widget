@@ -303,7 +303,14 @@ public class Controller2{
     }
     String description=descriptionHtml.substring(start, end); 
     
-    return Jsoup.parse(description, "ISO-8859-1").text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
+    String result=Jsoup.parse(description, "UTF-8").text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
+    
+    // this is a hack to remove any non printable characters from the description that JSoup has poorly converted.
+    StringBuffer sb=new StringBuffer(result);
+    for(int i=result.length()-1;i>=0;i--)
+      if ((int)sb.charAt(i)<32 || (int)sb.charAt(i)>126) sb.deleteCharAt(i);
+    
+    return sb.toString().trim();
   }
   
   private String arrayToString(String[] a){
