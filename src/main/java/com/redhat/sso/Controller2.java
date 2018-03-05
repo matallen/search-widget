@@ -102,7 +102,7 @@ public class Controller2{
   private List<Offering> search(String commonTag, String fields, String groupBy) throws IOException{
     int max=100;
     
-    String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=tag(" + commonTag + ")&fields=" + fields+"&count="+max;
+    String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=type(document)&filter=tag(" + commonTag + ")&fields=" + fields+"&count="+max;
     
     List<Offering> allOfferings=new ArrayList<Offering>();
     List<Document> alldocuments=new ArrayList<Document>();
@@ -132,12 +132,12 @@ public class Controller2{
     log.debug("Found "+size+" documents");
     for(int i=0;i<size;i++){
       Json arrayItem=json.at("list").at(i);
-      log.debug("adding document: "+arrayItem.at("subject").asString());
+      log.debug("adding document: ("+arrayItem.at("id").asString()+" - "+arrayItem.at("resources").at("html").at("ref").asString()+") "+arrayItem.at("subject").asString());
       result.add(new Document(
           arrayItem.at("id").asString(),
           arrayItem.at("subject").asString(),
           arrayItem.at("content").at("text").asString(),
-          arrayItem.at("resources").at("html").at("ref").asString(),
+          arrayItem.at("resources").at("html").at("ref").asString(), //url
           arrayItem.at("tags").asList()
           ));
     }
@@ -162,6 +162,7 @@ public class Controller2{
     // Now we have a list of overviews, and a separate list (initial) for all other docs
     
     for(Document overview:overviews){
+//      log.debug("Found overview: ("+String.format("%s7",overview.id) +") "+overview.name);
       Offering o=new Offering();
       o.offering=StrParse.get(overview.name).rightOf("-").trim();
       o.description=extractDescription(overview, overview.description, new String[]{"DESCRIPTION:", "Description:"});
@@ -196,13 +197,12 @@ public class Controller2{
         if (d.tags.contains(groupTag)){
           d.name=StrParse.get(d.name).leftOf("-").trim();
           d.description="";
+          log.debug("Overview ("+o.offering+"):: Adding document -> ("+d.id+")"+d.name);
           o.documents.add(d);
           remove.add(d);
         }
       }
-      for(Document d:remove) alldocuments.remove(d); remove.clear();
-      
-
+      alldocuments.removeAll(remove); remove.clear();
       
       
       // re-order the documents in alphabetical order
@@ -283,7 +283,7 @@ public class Controller2{
         break;
       }
     }
-    
+//    System.out.println(descriptionHtml);
 //    int iDesc=descriptionHtml.indexOf(token); //find DESCRIPTION
 //    if (iDesc<0) descriptionHtml.indexOf(token); //find Description
     
@@ -299,11 +299,11 @@ public class Controller2{
     if(end==-1) end=descriptionHtml.indexOf("<H1", start+1); // just in case it's uppercase
     
     if (start<0 || end<0){
-      return "Are you sure \""+token+"\" is within &lt;h1&gt; tags?";
+      return "Are you sure one of \""+arrayToString(tokensInOrder)+"\" is within &lt;h1&gt; tags?";
     }
     String description=descriptionHtml.substring(start, end); 
     
-    return Jsoup.parse(description).text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
+    return Jsoup.parse(description, "ISO-8859-1").text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
   }
   
   private String arrayToString(String[] a){
@@ -312,11 +312,11 @@ public class Controller2{
       sb.append(s).append(", ");
     return sb.substring(0, sb.length()>2?sb.length()-2:0);
   }
-  private List<String> extractHtmlList(Document src, String descriptionHtml, String[] tokensInOrder){
+  private List<String> extractHtmlList(Document src, String html, String[] tokensInOrder){
     String token=null;
     int iDesc=-1;
     for(String t:tokensInOrder){
-      if ((iDesc=descriptionHtml.indexOf(t))>=0){
+      if ((iDesc=html.indexOf(t))>=0){
         token=t;
         break;
       }
@@ -328,10 +328,10 @@ public class Controller2{
       return Arrays.asList("MISSING: \""+token+"\""); //abort early if the header token is not in the document
     }
     
-    int ulStart=descriptionHtml.indexOf("ul", iDesc);
-    int ulEnd=descriptionHtml.indexOf("/ul", ulStart);
+    int ulStart=html.indexOf("ul", iDesc);
+    int ulEnd=html.indexOf("/ul", ulStart);
     
-    String ul=descriptionHtml.substring(ulStart, ulEnd);
+    String ul=html.substring(ulStart, ulEnd);
     // now just split by <li>
     
     List<String> result=new ArrayList<String>();

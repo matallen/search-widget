@@ -367,7 +367,7 @@ $(window).on("resize", function () {
 		            <tr class="headerRow">
 		                <th align="left">Offering</th>
 		                <th align="left">Related&nbsp;Solutions</th>
-		                <th align="left">Related&nbsp;Products&nbsp;&amp;&nbsp;Training</th>
+		                <th align="left">Products&nbsp;&amp;&nbsp;Training</th>
 		                <th align="left">Documents</th>
 		            </tr>
 		        </thead>
@@ -455,6 +455,7 @@ $(window).on("resize", function () {
 		    #example_wrapper tbody tr td{
 		    	vertical-align:top;
 		    	font-family: Arial;
+		    	font-size: 11pt;
 		    	padding:7px;
 		    }
 		    
