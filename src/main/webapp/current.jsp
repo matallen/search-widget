@@ -218,7 +218,7 @@ $(document).ready(function() {
         	{ "targets": 0, "render": function (data,type,row){
 	        	return "<b>"+row['offering']+"</b><br/>"+row['description'];
         	}},
-        	{ "targets": 1, "render": function (data,type,row){
+        	{ "targets": 1, "render": function (data,type,row){ // SOLUTIONS
 	        	var list=row['relatedSolutions'];
 	        	//return displayList(list);
       			var list=row["relatedSolutions"];
@@ -236,13 +236,17 @@ $(document).ready(function() {
 	        	var list=row['relatedProducts'];
 	        	return displayList(list);
         	}},
-        	{ "targets": 3, "render": function (data,type,row){
+        	{ "targets": 3, "render": function (data,type,row){ // DOCUMENTS
       			var list=row["documents"];
       			var html="<ul>";
       			for (var i=0;i<list.length;i++){
         			//html+=".";
         			//html+=JSON.stringify(list[i]);
-        			html+="<li><a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
+        			if (list[i].url==undefined){
+        			  html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>";
+        			}else{
+        				html+="<li><a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
+        			}
       			}
       			return html+"</ul>";
         	}}

@@ -17,6 +17,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
@@ -45,8 +47,8 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
-    System.setProperty("username", "redacted");
-    System.setProperty("password", "redacted");
+    System.setProperty("username", "sa_offering_search");
+    System.setProperty("password", "RspvYYReEoo=");
     List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
@@ -179,7 +181,7 @@ public class Controller2{
       o.relatedSolutions.addAll(extractSolutions(overview, overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
       
       //now, if the overview has a "Related Documents" section, then append those links too
-      o.documents.addAll(extractOtherDocuments(overview, overview.description, new String[]{"OTHER MATERIALS:", "Other Materials:"}));
+      o.documents.addAll(extractOtherDocuments2(overview, overview.description, new String[]{"OTHER MATERIALS:", "Other Materials:"}));
       
       overview.name=StrParse.get(overview.name).leftOf("-").trim();
       overview.description="";
@@ -408,6 +410,71 @@ public class Controller2{
 //      String item=Jsoup.parse(li).text().toString().trim();
       result.add(new Solution(name, url));
       start=ul.indexOf("<li", end);
+    }
+    
+    return result;
+  }
+  
+  
+  private Integer indexOf(String html, String regex){
+    return indexOf(html, regex, 0);
+  }
+  private Integer indexOf(String html, String regex, int fromIndex){
+    //Matcher m=Pattern.compile(regex).matcher(fromIndex<html.length()?html.substring(fromIndex):html);
+    Matcher m=Pattern.compile(regex).matcher(html);
+    int result=-1;
+    while (m.find() && result<fromIndex)
+      result=m.start();
+    return result;
+  }
+  
+  
+  private List<Document> extractOtherDocuments2(Document src, String html, String[] tokensInOrder){
+    Matcher m=Pattern.compile("<[Hh]\\d>(.+?)</[Hh]\\d>").matcher(html);
+    int sectStart=-1;
+    int sectEnd=html.length();
+    List<String> tokens=Arrays.asList(tokensInOrder);
+    
+    while(m.find()){
+      String headerTitle=Jsoup.parse(m.group(1)).text().trim();
+      if (tokens.contains(headerTitle)){ // you've found a matching header
+        sectStart=m.start();
+        if (m.find())
+          sectEnd=m.start();
+      }
+    }
+    
+    if (sectStart<0) return new ArrayList<Document>();
+    
+    String htmlSubsection=html.substring(sectStart, sectEnd);
+    
+    int ulStart=-1;
+    ulStart=indexOf(htmlSubsection, "<[UL|ul].*>");
+    
+    if (ulStart<0) return new ArrayList<Document>();
+    
+    int ulEnd=indexOf(htmlSubsection, "</[Uu][Ll].*>");
+    
+    String ul=htmlSubsection.substring(ulStart, ulEnd+"</ul>".length()); // adding the ul length because i want to see it in the debug
+    
+    List<Document> result=new ArrayList<Document>();
+    
+    //<li>(.+?)</li>
+    
+    Matcher m2=Pattern.compile("<[Ll][Ii]>(.+?)</[Ll][Ii]>").matcher(ul);
+    while (m2.find()){
+      String item=m2.group(1);
+      String name="";
+      String url=null;
+      if (item.indexOf("<a ")>=0){
+        int hrefStart=item.indexOf("href=")+"href=".length()+1;
+        url=item.substring(hrefStart, item.indexOf("\"", hrefStart));
+      }
+      name=Jsoup.parse(item).text().toString().trim();
+      String id=null;
+      String description=null;
+      List<Object> tags=null;
+      result.add(new Document(id, name, description, url, tags));
     }
     
     return result;
