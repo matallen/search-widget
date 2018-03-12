@@ -47,6 +47,8 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
+    System.setProperty("username", "sa_offering_search");
+    System.setProperty("password", "RspvYYReEoo=");
     List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
@@ -197,7 +199,7 @@ public class Controller2{
         if (d.tags.contains(groupTag)){
           d.name=StrParse.get(d.name).leftOf("-").trim();
           d.description="";
-          log.debug("Overview ("+o.offering+"):: Adding document -> ("+d.id+")"+d.name);
+          log.debug("Overview ("+o.offering+"):: Adding (Mojo) document -> ("+d.id+")"+d.name);
           o.documents.add(d);
           remove.add(d);
         }
@@ -414,18 +416,24 @@ public class Controller2{
   }
   
   
+  private Map<String, Pattern> regexCache=new HashMap<String, Pattern>();
   private Integer indexOf(String html, String regex){
     return indexOf(html, regex, 0);
   }
   private Integer indexOf(String html, String regex, int fromIndex){
     //Matcher m=Pattern.compile(regex).matcher(fromIndex<html.length()?html.substring(fromIndex):html);
-    Matcher m=Pattern.compile(regex).matcher(html);
+    if (!regexCache.containsKey(regex))
+      regexCache.put(regex, Pattern.compile(regex));
+    
+    Matcher m=regexCache.get(regex).matcher(html);
     int result=-1;
     while (m.find() && result<fromIndex)
       result=m.start();
     return result;
   }
   
+  
+  private static Pattern LI_ITERATOR_REGEX=Pattern.compile("<[Ll][Ii]>(.+?)</[Ll][Ii]>");
   
   private List<Document> extractOtherDocuments2(Document src, String html, String[] tokensInOrder){
     Matcher m=Pattern.compile("<[Hh]\\d>(.+?)</[Hh]\\d>").matcher(html);
@@ -444,22 +452,21 @@ public class Controller2{
     
     if (sectStart<0) return new ArrayList<Document>();
     
+    // cut just the section we're interested in (the h1 to next start of h1 or end of doc if there is no more sections)
     String htmlSubsection=html.substring(sectStart, sectEnd);
     
     int ulStart=-1;
     ulStart=indexOf(htmlSubsection, "<[UL|ul].*>");
     
-    if (ulStart<0) return new ArrayList<Document>();
+    if (ulStart<0) return new ArrayList<Document>(); // exit early if we cant find a list
     
     int ulEnd=indexOf(htmlSubsection, "</[Uu][Ll].*>");
     
-    String ul=htmlSubsection.substring(ulStart, ulEnd+"</ul>".length()); // adding the ul length because i want to see it in the debug
+    String ul=htmlSubsection.substring(ulStart, ulEnd+"</ul>".length());// cut the list section so we can parse it easier
     
     List<Document> result=new ArrayList<Document>();
     
-    //<li>(.+?)</li>
-    
-    Matcher m2=Pattern.compile("<[Ll][Ii]>(.+?)</[Ll][Ii]>").matcher(ul);
+    Matcher m2=LI_ITERATOR_REGEX.matcher(ul);
     while (m2.find()){
       String item=m2.group(1);
       String name="";
@@ -472,6 +479,7 @@ public class Controller2{
       String id=null;
       String description=null;
       List<Object> tags=null;
+//      log.debug("Overview ("+o.offering+"):: Adding (Other Materials) document -> ("+url+")"+name);
       result.add(new Document(id, name, description, url, tags));
     }
     
@@ -479,47 +487,47 @@ public class Controller2{
   }
   
   
-  private List<Document> extractOtherDocuments(Document src, String html, String[] tokensInOrder){
-    String token=null;
-    int iDesc=-1;
-    for(String t:tokensInOrder){
-      if ((iDesc=html.indexOf(t))>=0){
-        token=t;
-        break;
-      }
-    }
-    
-    if (iDesc<0) return new ArrayList<Document>();
-    
-    int ulStart=html.indexOf("ul", iDesc);
-    int ulEnd=html.indexOf("/ul", ulStart);
-    
-    String ul=html.substring(ulStart, ulEnd);
-    
-    List<Document> result=new ArrayList<Document>();
-    
-    //loop
-    int end=0;
-    int start=ul.indexOf("<li", end);
-    while (start>0){
-      end=ul.indexOf("</li>", start);
-      String li=ul.substring(start, end);
-      String name="";
-      String url=null;
-      if (li.indexOf("<a ")>=0){
-        int hrefStart=li.indexOf("href=")+"href=".length()+1;
-        url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
-      }
-      name=Jsoup.parse(li).text().toString().trim();
-      
-      String id=null;
-      String description=null;
-      List<Object> tags=null;
-      result.add(new Document(id, name, description, url, tags));
-      start=ul.indexOf("<li", end);
-    }
-    
-    return result;
-  }
+//  private List<Document> extractOtherDocuments(Document src, String html, String[] tokensInOrder){
+//    String token=null;
+//    int iDesc=-1;
+//    for(String t:tokensInOrder){
+//      if ((iDesc=html.indexOf(t))>=0){
+//        token=t;
+//        break;
+//      }
+//    }
+//    
+//    if (iDesc<0) return new ArrayList<Document>();
+//    
+//    int ulStart=html.indexOf("ul", iDesc);
+//    int ulEnd=html.indexOf("/ul", ulStart);
+//    
+//    String ul=html.substring(ulStart, ulEnd);
+//    
+//    List<Document> result=new ArrayList<Document>();
+//    
+//    //loop
+//    int end=0;
+//    int start=ul.indexOf("<li", end);
+//    while (start>0){
+//      end=ul.indexOf("</li>", start);
+//      String li=ul.substring(start, end);
+//      String name="";
+//      String url=null;
+//      if (li.indexOf("<a ")>=0){
+//        int hrefStart=li.indexOf("href=")+"href=".length()+1;
+//        url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
+//      }
+//      name=Jsoup.parse(li).text().toString().trim();
+//      
+//      String id=null;
+//      String description=null;
+//      List<Object> tags=null;
+//      result.add(new Document(id, name, description, url, tags));
+//      start=ul.indexOf("<li", end);
+//    }
+//    
+//    return result;
+//  }
   
 }
