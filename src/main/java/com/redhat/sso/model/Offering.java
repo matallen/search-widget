@@ -6,9 +6,12 @@ import java.util.List;
 public class Offering{
   public String offering;
   public String description;
+  public String type;
   public List<String> relatedProducts=new ArrayList<String>();
   public List<Solution> relatedSolutions=new ArrayList<Solution>();
   public List<Document> documents=new ArrayList<Document>();
+  
+  public String getType()                    {return type;}
   public String getOffering()                {return offering;}
   public String getDescription()             {return description;}
   public List<Document> getDocuments()       {return documents;}

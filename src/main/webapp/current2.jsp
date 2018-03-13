@@ -208,27 +208,17 @@ $(document).ready(function() {
         "pageLength" : 5, // default page entries
         "info" : false,
         "columns": [
-            { "data": "type", "className": "typeColumn" },
             { "data": "offering", "className": "offeringColumn" },
+            //{ "data": "description" },
             { "data": "relatedSolutions", "className": "relatedSolutionsColumn"},
             { "data": "relatedProducts", "className": "relatedProductsColumn"},
             { "data": "documents", "className": "documentsColumn" }
         ],
         "columnDefs":[
         	{ "targets": 0, "render": function (data,type,row){
-        	  //return "X"+row['type']+"X = "+ ("undefined" == typeof row['type']);
-        	  if ("undefined" == typeof row['type']){
-        		  //return "false";
-        		  return row['type'];
-        		}else
-        		  //return "true";
-        			//return row['type']+"<img style=\"width:45px;\"src=\""+row['type']+".png\" title=\""+row['type']+"\"/>";
-        			return "<img style=\"width:45px;\"src=\"https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/"+row['type']+".png\" title=\""+row['type']+"\"/>";
-        	}},
-        	{ "targets": 1, "render": function (data,type,row){
 	        	return "<b>"+row['offering']+"</b><br/>"+row['description'];
         	}},
-        	{ "targets": 2, "render": function (data,type,row){ // SOLUTIONS
+        	{ "targets": 1, "render": function (data,type,row){ // SOLUTIONS
 	        	var list=row['relatedSolutions'];
 	        	//return displayList(list);
       			var list=row["relatedSolutions"];
@@ -242,11 +232,11 @@ $(document).ready(function() {
       			}
       			return html+"</ul>";
         	}},
-        	{ "targets": 3, "render": function (data,type,row){
+        	{ "targets": 2, "render": function (data,type,row){
 	        	var list=row['relatedProducts'];
 	        	return displayList(list);
         	}},
-        	{ "targets": 4, "render": function (data,type,row){ // DOCUMENTS
+        	{ "targets": 3, "render": function (data,type,row){ // DOCUMENTS
       			var list=row["documents"];
       			var html="<ul>";
       			for (var i=0;i<list.length;i++){
@@ -379,7 +369,6 @@ $(window).on("resize", function () {
   <table id="example" class="display" cellspacing="0" width="100%">
 		        <thead>
 		            <tr class="headerRow">
-		                <th align="left"></th>
 		                <th align="left">Offering</th>
 		                <th align="left">Related&nbsp;Solutions</th>
 		                <th align="left">Products&nbsp;&amp;&nbsp;Training</th>
@@ -424,14 +413,9 @@ $(window).on("resize", function () {
 		      background-color: #EFEFEF;
 		    }
 		    .headerRow th:hover{cursor: hand;}
-		    
-		    .typeColumn {
+		    .offeringColumn {
 		      border-top-left-radius: 4px;
 		      border-bottom-left-radius: 4px;
-		    	width: 5%;
-		    }
-		    
-		    .offeringColumn {
 		    	width: 50%;
 		    }
 		    .relatedSolutionsColumn{
@@ -440,6 +424,8 @@ $(window).on("resize", function () {
 		    .relatedProductsColumn{
 		      width: 15%;
 		    }
+		    
+		    
 		    .relatedSolutionsColumn ul{ padding: 0; } /* remove bullets and indent where bullet would be*/
 		    .relatedSolutionsColumn ul li{
 		      list-style-type: none;

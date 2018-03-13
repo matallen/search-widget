@@ -166,6 +166,7 @@ public class Controller2{
       Offering o=new Offering();
       o.offering=StrParse.get(overview.name).rightOf("-").trim();
       o.description=extractDescription(overview, overview.description, new String[]{"DESCRIPTION:", "Description:"});
+      o.type=extractType(overview);
       
 //      System.out.println("configs: "+truncate.size());
       if (truncate.containsKey("offering") && o.offering.length()>Integer.parseInt(truncate.get("offering")))
@@ -272,7 +273,16 @@ public class Controller2{
     if (value==null) log.error("ERROR: No password configured in environment or property variables");
     return value;
   }
-
+  
+  private String extractType(Document src){
+    String result=null;
+    for(String tag:src.getTags()){
+      if ("portfolio_offering".equalsIgnoreCase(tag)) return "portfolio_offering";
+      if ("community_offering".equalsIgnoreCase(tag)) return "community_offering";
+      if ("standard_offering".equalsIgnoreCase(tag)) return "standard_offering";
+    }
+    return result;
+  }
   
   private String extractDescription(Document src, String descriptionHtml, String[] tokensInOrder){
     String token=null;
