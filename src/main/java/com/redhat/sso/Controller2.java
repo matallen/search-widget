@@ -102,7 +102,7 @@ public class Controller2{
   private List<Offering> search(String commonTag, String fields, String groupBy) throws IOException{
     int max=100;
     
-    String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=type(document)&filter=tag(" + commonTag + ")&fields=" + fields+"&count="+max;
+    String searchUrl="https://mojo.redhat.com/api/core/v3/contents?filter=type(document,file)&filter=tag(" + commonTag + ")&fields=" + fields+"&count="+max;
     
     List<Offering> allOfferings=new ArrayList<Offering>();
     List<Document> alldocuments=new ArrayList<Document>();

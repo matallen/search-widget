@@ -226,7 +226,7 @@ $(document).ready(function() {
         		  //return "true";
         			//return row['type']+"<img style=\"width:45px;\"src=\""+row['type']+".png\" title=\""+row['type']+"\"/>";
         			//return "<img style=\"width:45px;\"src=\"https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/"+row['type']+".png\" title=\""+row['type'].replace(new RegExp("_", 'g'), " ")+"\"/>";
-        			return "<img style=\"width:45px;\"src=\""+baseUrl+"/search-widget/"+row['type']+".png\" title=\""+row['type'].replace(new RegExp("_", 'g'), " ")+"\"/>";
+        			return "<img style=\"width:25px;\"src=\""+baseUrl+"/search-widget/"+row['type']+".png\" title=\""+row['type'].replace(new RegExp("_", 'g'), " ")+"\"/>";
         	}},
         	{ "targets": 1, "render": function (data,type,row){
 	        	return "<b>"+row['offering']+"</b><br/>"+row['description'];
@@ -391,7 +391,7 @@ $(document).ready(function() {
   padding-right: 30px;
 }
 .limg{
-  width:30px;
+  width:20px;
 }
 </style>
 <div style="position: relative; left: 300px;top:35px;">
@@ -449,7 +449,7 @@ $(document).ready(function() {
 		    .typeColumn {
 		      border-top-left-radius: 4px;
 		      border-bottom-left-radius: 4px;
-		    	width: 5%;
+		    	width: 2%;
 		    }
 		    
 		    .offeringColumn {
