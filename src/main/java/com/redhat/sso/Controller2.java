@@ -47,6 +47,8 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
+    System.setProperty("username", "sa_offering_search");
+    System.setProperty("password", "RspvYYReEoo=");
     List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
@@ -151,7 +153,7 @@ public class Controller2{
     List<Document> remove=new ArrayList<Document>();
     for(Document d:alldocuments){
       // find all overview docs
-      if (d.tags.contains("doc_overview")){ // TODO: change to doc_overview
+      if (d.tags.contains("doc_overview") || d.tags.contains("community_offering")){
         overviews.add(d);
         remove.add(d);
       }
@@ -163,56 +165,80 @@ public class Controller2{
     
     for(Document overview:overviews){
 //      log.debug("Found overview: ("+String.format("%s7",overview.id) +") "+overview.name);
-      Offering o=new Offering();
-      o.offering=StrParse.get(overview.name).rightOf("-").trim();
-      o.description=extractDescription(overview, overview.description, new String[]{"DESCRIPTION:", "Description:"});
-      o.type=extractType(overview);
       
-//      System.out.println("configs: "+truncate.size());
-      if (truncate.containsKey("offering") && o.offering.length()>Integer.parseInt(truncate.get("offering")))
-        o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")))+"...";
-      
-      if (truncate.containsKey("description") && o.description.length()>Integer.parseInt(truncate.get("description")))
-        o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")))+"...";
-      
-      o.relatedProducts.addAll(extractHtmlList(overview, overview.description, new String[]{"PRODUCTS &amp; TRAINING:","Products &amp; Training:", "PRODUCTS USED:"}));
-//      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
-      o.relatedSolutions.addAll(extractSolutions(overview, overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
-      
-      //now, if the overview has a "Related Documents" section, then append those links too
-      o.documents.addAll(extractOtherDocuments2(overview, overview.description, new String[]{"OTHER MATERIALS:", "Other Materials:"}));
-      
-      overview.name=StrParse.get(overview.name).leftOf("-").trim();
-      overview.description="";
-      
-      o.documents.add(overview);
-      String groupTag="";
-      // find the offering tag to hunt down the related docs
-      for(String tag:overview.tags){
-        if (tag.startsWith(groupBy)){
-          groupTag=tag; break;
+      if (overview.tags.contains("community_offering")){
+        // then this is a submitted community offering with no linked documents so extract the values here
+        Offering o=new Offering();
+//        o.offering=StrParse.get(overview.name).rightOf(":").trim();
+        o.offering=overview.name;
+        o.description=extract(overview, overview.description, new String[]{"OFFERING OVERVIEW:"});
+        o.type=extractType(overview);
+        o.relatedProducts=Arrays.asList(extract(overview, overview.description, new String[]{"PRODUCTS/TECHNOLOGY FOCUS:"}));
+        overview.name=StrParse.get(overview.name).rightOf(":").trim();
+        o.documents.add(overview);
+        
+        String d1x=extract(overview, overview.description, new String[]{"COMMUNITY OFFERING DEFINITION DOCUMENT:"});
+        o.documents.add(new Document(null, "Offering Definition Document", null, d1x, null));
+        String d2x=extract(overview, overview.description, new String[]{"SUPPORTING DOCUMENTATION:"});
+        o.documents.add(new Document(null, "Supporting Documentation", null, d2x, null));
+        
+        offerings.add(o);
+        
+      }else{
+//        if (true) continue; //DEV ONLY DEV ONLY DEV ONLY DEV ONLY
+        // then this is a portfolio or standard offering and has associated documents to link
+        
+        Offering o=new Offering();
+        o.offering=StrParse.get(overview.name).rightOf("-").trim();
+        o.description=extractDescription(overview, overview.description, new String[]{"DESCRIPTION:", "Description:"});
+        o.type=extractType(overview);
+        
+  //      System.out.println("configs: "+truncate.size());
+        if (truncate.containsKey("offering") && o.offering.length()>Integer.parseInt(truncate.get("offering")))
+          o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")))+"...";
+        
+        if (truncate.containsKey("description") && o.description.length()>Integer.parseInt(truncate.get("description")))
+          o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")))+"...";
+        
+        o.relatedProducts.addAll(extractHtmlList(overview, overview.description, new String[]{"PRODUCTS &amp; TRAINING:","Products &amp; Training:", "PRODUCTS USED:"}));
+  //      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
+        o.relatedSolutions.addAll(extractSolutions(overview, overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
+        
+        //now, if the overview has a "Related Documents" section, then append those links too
+        o.documents.addAll(extractOtherDocuments2(overview, overview.description, new String[]{"OTHER MATERIALS:", "Other Materials:"}));
+        
+        overview.name=StrParse.get(overview.name).leftOf("-").trim();
+        overview.description="";
+        
+        o.documents.add(overview);
+        String groupTag="";
+        // find the offering tag to hunt down the related docs
+        for(String tag:overview.tags){
+          if (tag.startsWith(groupBy)){
+            groupTag=tag; break;
+          }
         }
-      }
-      // find the related docs using the groupTag
-      for (Document d:alldocuments){
-        if (d.tags.contains(groupTag)){
-          d.name=StrParse.get(d.name).leftOf("-").trim();
-          d.description="";
-          log.debug("Overview ("+o.offering+"):: Adding (Mojo) document -> ("+d.id+")"+d.name);
-          o.documents.add(d);
-          remove.add(d);
+        // find the related docs using the groupTag
+        for (Document d:alldocuments){
+          if (d.tags.contains(groupTag)){
+            d.name=StrParse.get(d.name).leftOf("-").trim();
+            d.description="";
+            log.debug("Overview ("+o.offering+"):: Adding (Mojo) document -> ("+d.id+")"+d.name);
+            o.documents.add(d);
+            remove.add(d);
+          }
         }
+        alldocuments.removeAll(remove); remove.clear();
+        
+        // re-order the documents in alphabetical order
+        Collections.sort(o.documents, new Comparator<Document>(){
+          public int compare(Document o1, Document o2){
+            return priority(o1).compareTo(priority(o2));
+          }});
+        
+        offerings.add(o);
       }
-      alldocuments.removeAll(remove); remove.clear();
-      
-      
-      // re-order the documents in alphabetical order
-      Collections.sort(o.documents, new Comparator<Document>(){
-        public int compare(Document o1, Document o2){
-          return priority(o1).compareTo(priority(o2));
-      }});
-      
-      offerings.add(o);
+        
     }
     
     log.debug("aggregated into "+offerings.size() +" offerings");
@@ -281,6 +307,36 @@ public class Controller2{
       if ("community_offering".equalsIgnoreCase(tag)) return "community_offering";
       if ("standard_offering".equalsIgnoreCase(tag)) return "standard_offering";
     }
+    return result;
+  }
+  private String extract(Document src, String descriptionHtml, String[] tokensInOrder){
+    descriptionHtml=descriptionHtml.replaceAll("&#160;", " ");
+    String token=null;
+    int iDesc=-1;
+    for(String t:tokensInOrder){
+      if ((iDesc=descriptionHtml.indexOf(t))>=0){
+        token=t;
+        break;
+      }
+    }
+    if (iDesc<0){
+      log.error("Unable to find \""+arrayToString(tokensInOrder)+"\" in document: "+src.getUrl());
+      return "NOT FOUND: "+arrayToString(tokensInOrder);
+    }
+    
+    int start=descriptionHtml.substring(0, iDesc).lastIndexOf("<p");
+    int end=descriptionHtml.indexOf("</p>", start+1);
+    end=descriptionHtml.indexOf("</p>", end+1);
+    
+    if (start<0 || end<0){
+      return "Are you sure one of \""+arrayToString(tokensInOrder)+"\" is within &lt;p&gt; tags?";
+    }
+    String description=descriptionHtml.substring(start, end); 
+    
+    String result=Jsoup.parse(description, "UTF-8").text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
+    
+//    System.out.println("DESCRIPTION = "+result);
+    
     return result;
   }
   

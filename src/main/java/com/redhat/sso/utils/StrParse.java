@@ -9,7 +9,7 @@ public class StrParse{
     return new StrParse(value);
   }
   public String rightOf(String separator){
-    if (value.indexOf("-")>=0){
+    if (value.indexOf(separator)>=0){
       return value.substring(value.indexOf(separator)+1);
     }else
       return value;
