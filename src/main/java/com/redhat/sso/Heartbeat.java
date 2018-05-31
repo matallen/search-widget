@@ -25,8 +25,8 @@ public class Heartbeat {
   }
   
   public static void start(long intervalInMs) {
-    t = new Timer("cop-ninja-heartbeat", false);
-    t.scheduleAtFixedRate(new HeartbeatRunnable(), 20000l, intervalInMs);
+    t = new Timer("search-widget-heartbeat", false);
+    t.scheduleAtFixedRate(new HeartbeatRunnable(), 60000l, intervalInMs);
   }
 
   public static void stop() {}
@@ -73,7 +73,8 @@ public class Heartbeat {
           Transport.send(message);
         }
       }catch(Exception e){
-        throw new RuntimeException(e);
+        log.error(e.getMessage(), e);
+//        throw new RuntimeException(e);
       }
     }      
   }
