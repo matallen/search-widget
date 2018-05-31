@@ -47,7 +47,9 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
-    List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
+    System.setProperty("username", "sa_offering_search");
+    System.setProperty("password", "RspvYYReEoo=");
+    List<Offering> result=new Controller2().search("community_offering", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
 
@@ -547,49 +549,5 @@ public class Controller2{
     
     return result;
   }
-  
-  
-//  private List<Document> extractOtherDocuments(Document src, String html, String[] tokensInOrder){
-//    String token=null;
-//    int iDesc=-1;
-//    for(String t:tokensInOrder){
-//      if ((iDesc=html.indexOf(t))>=0){
-//        token=t;
-//        break;
-//      }
-//    }
-//    
-//    if (iDesc<0) return new ArrayList<Document>();
-//    
-//    int ulStart=html.indexOf("ul", iDesc);
-//    int ulEnd=html.indexOf("/ul", ulStart);
-//    
-//    String ul=html.substring(ulStart, ulEnd);
-//    
-//    List<Document> result=new ArrayList<Document>();
-//    
-//    //loop
-//    int end=0;
-//    int start=ul.indexOf("<li", end);
-//    while (start>0){
-//      end=ul.indexOf("</li>", start);
-//      String li=ul.substring(start, end);
-//      String name="";
-//      String url=null;
-//      if (li.indexOf("<a ")>=0){
-//        int hrefStart=li.indexOf("href=")+"href=".length()+1;
-//        url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
-//      }
-//      name=Jsoup.parse(li).text().toString().trim();
-//      
-//      String id=null;
-//      String description=null;
-//      List<Object> tags=null;
-//      result.add(new Document(id, name, description, url, tags));
-//      start=ul.indexOf("<li", end);
-//    }
-//    
-//    return result;
-//  }
   
 }
