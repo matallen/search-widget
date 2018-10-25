@@ -94,10 +94,11 @@ public class Controller2{
   
   private Integer priority(Document d){
     if (d.name.toLowerCase().contains("offering page")) return 0;
-    if (d.name.toLowerCase().contains("definition")) return 1;
-    if (d.name.toLowerCase().contains("datasheet")) return 2;
-    if (d.name.toLowerCase().contains("slide")) return 3;
-    if (d.name.toLowerCase().contains("task")) return 4;
+    if (d.name.toLowerCase().contains("overview")) return 0+d.name.length();
+    if (d.name.toLowerCase().contains("definition")) return 100;
+    if (d.name.toLowerCase().contains("datasheet")) return 200;
+    if (d.name.toLowerCase().contains("slide")) return 300;
+    if (d.name.toLowerCase().contains("task")) return 400;
     return 100+d.name.length();
   }
   
@@ -302,6 +303,12 @@ public class Controller2{
   
   private String extractType(Document src){
     String result=null;
+    for(String tag:src.getTags()){
+    	if ("program".equalsIgnoreCase(tag)) return "program";
+    }
+    for(String tag:src.getTags()){
+    	if ("solution".equalsIgnoreCase(tag)) return "solution";
+    }
     for(String tag:src.getTags()){
       if ("portfolio_offering".equalsIgnoreCase(tag)) return "portfolio_offering";
       if ("community_offering".equalsIgnoreCase(tag)) return "community_offering";
@@ -540,6 +547,12 @@ public class Controller2{
         url=item.substring(hrefStart, item.indexOf("\"", hrefStart));
       }
       name=Jsoup.parse(item).text().toString().trim();
+      
+      // check name is not too long, if it is then truncate it
+      if (name.length()>30){
+      	name=name.substring(0, name.indexOf(" ", 30))+"...";
+      }
+      
       String id=null;
       String description=null;
       List<Object> tags=null;

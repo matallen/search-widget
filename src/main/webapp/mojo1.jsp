@@ -1,6 +1,8 @@
 <html>
 <base target="_parent">
-<div style="height:800px;">   
+<div style="height:200px;">   
+
+  
 
 <!-- jquery 1.11.3 -->
 <script>
@@ -216,25 +218,23 @@ $(document).ready(function() {
             { "data": "relatedProducts", "className": "relatedProductsColumn"},
             { "data": "documents", "className": "documentsColumn" }
         ],
-        "createdRow": function(row, data, dataIndex){
-          $(row).addClass(data['type']);
-        },
         "columnDefs":[
-        	{ "targets": 0, "type": "string", "orderable": true, "render": function (data,type,row){
+        	{ "targets": 0, "orderable": true, "render": function (data,type,row){
+        	  //return "X"+row['type']+"X = "+ ("undefined" == typeof row['type']);
         	  if ("undefined" == typeof row['type']){
+        		  //return "false";
         		  return row['type'];
         		}else
-        		  //return "<img style=\"width:25px;\"src=\""+baseUrl+"/search-widget/"+row['type']+".png\" title=\""+row['type'].replace(new RegExp("_", 'g'), " ")+"\"/>";
-        			//return "<img style=\"width:25px;\"src=\""+baseUrl+"/search-widget/"+row['type']+".png\" title=\"services_"+row['type']+"\"/>";
-        			var type=(row['type'].includes('offering')?'offering':row['type']);
-        			//return "<img style=\"width:25px;\"src=\""+baseUrl+"/search-widget/"+type+".png\" title=\"services_"+type+"\"/>";
-        	  return "<img  src=\""+baseUrl+"/search-widget/"+type+".png\" title=\"services_"+type+"\"/>";
+        		  //return "true";
+        			//return row['type']+"<img style=\"width:45px;\"src=\""+row['type']+".png\" title=\""+row['type']+"\"/>";
+        			//return "<img style=\"width:45px;\"src=\"https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/"+row['type']+".png\" title=\""+row['type'].replace(new RegExp("_", 'g'), " ")+"\"/>";
+        			return "<img style=\"width:25px;\"src=\""+baseUrl+"/search-widget/"+row['type']+".png\" title=\""+row['type'].replace(new RegExp("_", 'g'), " ")+"\"/>";
         	}},
         	{ "targets": 1, "orderable": true, "render": function (data,type,row){
 	        	return "<b>"+row['offering']+"</b><br/>"+row['description'];
         	}},
         	{ "targets": 2, "orderable": false, "render": function (data,type,row){ // SOLUTIONS
-	        	//var list=row['relatedSolutions'];
+	        	var list=row['relatedSolutions'];
 	        	//return displayList(list);
       			var list=row["relatedSolutions"];
       			var html="<ul>";
@@ -297,49 +297,83 @@ $(document).ready(function() {
 
 
 
-//var filter="";
-//function filterit(filter){
-//  $('#example').DataTable().search(filter).draw();
-//}
-//
-//function checkit(value){
-//  if (filter.includes(value)){
-//    filter=filter.replace(value,"");
-//  }else{
-//    filter=filter+value;
-//  }
-//  filterit(filter);
-//}
-//var filterStr="";
-function checkit2(value){
-  var filterStr=$('#example_filter label input').val();
-  
-  // remove all "services_" strings
-  var prot_i=0;
-  var prot_max=10;
-  while (filterStr.indexOf("services_")>=0){
-	  prot_i=prot_i+1;
-	  if (prot_i>prot_max) break;
-	  var s=filterStr.indexOf("services_");
-	  var searchFor=filterStr.substring(s, filterStr.indexOf(" ",s)<0?filterStr.length:filterStr.indexOf(" ",s));
-	  if (searchFor!=value){
-		  filterStr=filterStr.replace(searchFor,"");
-	  }
-  }
-  
-  if (filterStr.includes(value)){
-		filterStr=filterStr.replace(value,"");
-  }else{
-	  filterStr=filterStr+" "+value;
-  }
-	//var str=filterStr+" "+$('#example_filter label input').val();
-	filterStr=filterStr.trim();
-	$('#example').DataTable().search(filterStr).draw();
-	//$('#example').DataTable().search("test").draw();
+//////////////////// PLUGIN TO PERFORM AJAX REFRESH /////////////////////
+jQuery.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallback, bStandingRedraw ){
+    // DataTables 1.10 compatibility - if 1.10 then `versionCheck` exists.
+    // 1.10's API has ajax reloading built in, so we use those abilities
+    // directly.
+    if ( jQuery.fn.dataTable.versionCheck ){
+        var api = new jQuery.fn.dataTable.Api( oSettings );
+ 
+        if ( sNewSource ){
+            api.ajax.url( sNewSource ).load( fnCallback, !bStandingRedraw );
+        }else{
+            api.ajax.reload( fnCallback, !bStandingRedraw );
+        }
+        return;
+    }
+ 
+    if ( sNewSource !== undefined && sNewSource !== null ){
+        oSettings.sAjaxSource = sNewSource;
+    }
+ 
+    // Server-side processing should just call fnDraw
+    if ( oSettings.oFeatures.bServerSide ){
+        this.fnDraw();
+        return;
+    }
+ 
+    this.oApi._fnProcessingDisplay( oSettings, true );
+    var that = this;
+    var iStart = oSettings._iDisplayStart;
+    var aData = [];
+ 
+    this.oApi._fnServerParams( oSettings, aData );
+ 
+    oSettings.fnServerData.call( oSettings.oInstance, oSettings.sAjaxSource, aData, function(json) {
+        /* Clear the old information from the table */
+        that.oApi._fnClearTable( oSettings );
+ 
+        /* Got the data - add it to the table */
+        var aData =  (oSettings.sAjaxDataProp !== "") ? that.oApi._fnGetObjectDataFn( oSettings.sAjaxDataProp )( json ) : json;
+ 
+        for ( var i=0 ; i<aData.length ; i++ ){
+            that.oApi._fnAddData( oSettings, aData[i] );
+        }
+ 
+        oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
+ 
+        that.fnDraw();
+ 
+        if ( bStandingRedraw === true ){
+            oSettings._iDisplayStart = iStart;
+            that.oApi._fnCalculateEnd( oSettings );
+            that.fnDraw( false );
+        }
+ 
+        that.oApi._fnProcessingDisplay( oSettings, false );
+ 
+        /* Callback user function - for event handlers etc */
+        if ( typeof fnCallback == 'function' && fnCallback !== null ){
+            fnCallback( oSettings );
+        }
+    }, oSettings );
+};
+//////////////////// END OF PLUGINS ///////////////////////
+
+var filter="";
+function filterit(filter){
+  $('#example').DataTable().search(filter).draw();
 }
 
-
-
+function checkit(value){
+  if (filter.includes(value)){
+    filter=filter.replace(value,"");
+  }else{
+    filter=filter+value;
+  }
+  filterit(filter);
+}
 
 // TODO: THIS DOESNT WORK
 //var width = $(window).width() - 25; 
@@ -352,94 +386,42 @@ $(window).on("resize", function () {
 }).resize();
 
 
-$(document).ready(function(){
-	document.getElementById("legend_program").src=baseUrl+"/search-widget/program.png";
-	document.getElementById("legend_solution").src=baseUrl+"/search-widget/solution.png";
-	document.getElementById("legend_offering").src=baseUrl+"/search-widget/offering.png";
-	//document.getElementById("legend_portfolio").src=baseUrl+"/search-widget/portfolio_offering.png";
-	//document.getElementById("legend_standard").src=baseUrl+"/search-widget/standard_offering.png";
-	//document.getElementById("legend_community").src=baseUrl+"/search-widget/community_offering.png";
+$(document).ready(function() {
+	document.getElementById("legend_portfolio").src=baseUrl+"/search-widget/portfolio_offering.png";
+	document.getElementById("legend_standard").src=baseUrl+"/search-widget/standard_offering.png";
+	document.getElementById("legend_community").src=baseUrl+"/search-widget/community_offering.png";
 	
 	//$("#bfCaptchaEntry").click(function(){ myFunction(); });
 	
 });
 </script>
 <style>
-/*
 .ltext{
   font-family: arial;
   padding-left: 10px;
   padding-right: 30px;
 }
-*/
-/*
 .limg{
   width:20px;
 }
-*/
-/*
-.portfolio_offering{ background-color: #e0ecdf !important;}
-.standard_offering{ background-color: #e0ecdf !important;}
-.community_offering{ background-color: #e0ecdf !important;}
-.program{ background-color: #d5e4ef !important;}
-.solution{ background-color: red !important;}
-*/
-.limg{
-	height: 25px;
-}
 </style>
-<link rel="stylesheet" type="text/css" href="https://overpass-30e2.kxcdn.com/overpass.css">
+<link rel="stylesheet" type="text/css" href="http://overpass-30e2.kxcdn.com/overpass.css">
 
 <div style="width:98%; height:35px; padding: 13px; background-color: #3b3a3a; text-align: left; vertical-align: middle;">
 	<span style="color: #ffffff; font-family: Overpass, Sans-Serif; font-size: 16pt; ">
-		OFFERING SEARCH
+		OFFERING SEARCH &nbsp; (not Solutions or Programs)
 	</span>
 </div>
+<div style="position: relative; left: 300px;top:20px;width:600px;">
 
-
-<script>
-function filter(str){
-	//console.log();
-	$('#example_filter label input').val(str);
-	$('#example').DataTable().search(str).draw();
-}
-</script>
-
-
-<div style="position: relative; left: 300px;top:20px;width:900px;">
-	<table style="font-family: overpass">
-		<tr>
-			<td><a href="#" onclick="return checkit2('services_program');"><img class="limg" id="legend_program"/></a></td>
-			<td><a href="#" onclick="return checkit2('services_program');">Programs</a></td>
-
-			<td><a href="#" onclick="return checkit2('services_solution');"><img class="limg" id="legend_solution"/></a></td>
-			<td><a href="#" onclick="return checkit2('services_solution');">Solutions</a></td>
-
-			<td><a href="#" onclick="return checkit2('services_offering');"><img class="limg" id="legend_offering"/></a></td>
-			<td><a href="#" onclick="return checkit2('services_offering');">Offerings</a></td>
-		</tr>
-	</table>
+	<img class="limg" id="legend_portfolio"/><span class="ltext">Portfolio Offering</span><img class="limg" id="legend_standard"/><span class="ltext">Standard Offering</span><img class="limg" id="legend_community"/><span class="ltext">Community Offering</span>
 </div>
-
-<!--
-<div style="position: relative; left: 300px;top:20px;width:900px;">
-	<a href="#" onclick="return checkit2('services_program')">            <span class="program">            <img class="limg" id="legend_program"/>   <span class="ltext">Program</span></span></a>
-	<a href="#" onclick="return checkit2('services_solution')">           <span class="solution">           <img class="limg" id="legend_solution"/>  <span class="ltext">Solution</span></span></a>
-	<a href="#" onclick="return checkit2('services_offering')">           <span class="offering">           <img class="limg" id="legend_offering"/>  <span class="ltext">Offering</span></span></a>
-</div>
--->
-	<!--
-	<a href="#" onclick="return filter('services_portfolio_offering')"> <span class="portfolio_offering"> <img class="limg" id="legend_portfolio"/> <span class="ltext">Portfolio Offering</span></span></a>
-	<a href="#" onclick="return filter('services_standard_offering')">  <span class="standard_offering">  <img class="limg" id="legend_standard"/>  <span class="ltext">Standard Offering</span></span></a>
-	<a href="#" onclick="return filter('services_community_offering')"> <span class="community_offering"> <img class="limg" id="legend_community"/> <span class="ltext">Community Offering</span></span></a>
-	-->
-
   <table id="example" class="display" cellspacing="0" width="100%">
 		        <thead>
 		            <tr class="headerRow">
 		                <th align="left"></th>
-		                <th align="left">Artifact</th>
-		                <th align="left">Related</th>
+		                <th align="left">Offering</th>
+		                <th align="left">Related&nbsp;Solutions</th>
 		                <th align="left">Products&nbsp;&amp;&nbsp;Training</th>
 		                <th align="left">Documents</th>
 		            </tr>
@@ -451,14 +433,12 @@ function filter(str){
 		    #example_wrapper thead tr th:hover{
 		    	color: #ddd;
 		    }
-		    /*
 		    .even td a{
 		    	border:1px solid white;
 		    }
 		    .odd td a{
 		    	border:1px solid #eee;
 		    }
-		    */
 		    a{
 		    	text-decoration: underline;
 		    	border-radius:3px;
@@ -468,7 +448,7 @@ function filter(str){
 		    }
 		    a:hover{
 		    	text-decoration: none;
-		    	/*border:1px solid black;*/
+		    	border:1px solid black;
 		    	border-radius:3px;
 		    	padding:2px;
 		    	color: #666;
