@@ -336,6 +336,7 @@ function checkit2(value){
 	filterStr=filterStr.trim();
 	$('#example').DataTable().search(filterStr).draw();
 	//$('#example').DataTable().search("test").draw();
+	return false;
 }
 
 
