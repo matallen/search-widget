@@ -410,14 +410,14 @@ function filter(str){
 <div style="position: relative; left: 300px;top:20px;width:900px;">
 	<table style="font-family: overpass">
 		<tr>
-			<td><a href="#" onclick="return checkit2('services_program');"><img class="limg" id="legend_program"/></a></td>
-			<td><a href="#" onclick="return checkit2('services_program');">Programs</a></td>
+			<td><a href="#" onclick="checkit2('services_program');return false;"><img class="limg" id="legend_program"/></a></td>
+			<td><a href="#" onclick="checkit2('services_program');return false;">Programs</a></td>
 
-			<td><a href="#" onclick="return checkit2('services_solution');"><img class="limg" id="legend_solution"/></a></td>
-			<td><a href="#" onclick="return checkit2('services_solution');">Solutions</a></td>
+			<td><a href="#" onclick="checkit2('services_solution');return false;"><img class="limg" id="legend_solution"/></a></td>
+			<td><a href="#" onclick="checkit2('services_solution');return false;">Solutions</a></td>
 
-			<td><a href="#" onclick="return checkit2('services_offering');"><img class="limg" id="legend_offering"/></a></td>
-			<td><a href="#" onclick="return checkit2('services_offering');">Offerings</a></td>
+			<td><a href="#" onclick="checkit2('services_offering');return false;"><img class="limg" id="legend_offering"/></a></td>
+			<td><a href="#" onclick="checkit2('services_offering');return false;">Offerings</a></td>
 		</tr>
 	</table>
 </div>
