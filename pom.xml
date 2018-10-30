@@ -35,6 +35,35 @@
 		</plugins>
 	</build>
 
+<profiles>
+    <profile>
+      <id>openshift</id>
+      <build>
+        <plugins>
+          <plugin>
+              <groupId>org.apache.tomcat.maven</groupId>
+              <artifactId>tomcat7-maven-plugin</artifactId>
+              <version>2.0</version>
+              <executions>
+                  <execution>
+                      <id>tomcat-run</id>
+                      <goals>
+                          <goal>exec-war-only</goal>
+                      </goals>
+                      <phase>package</phase>
+                      <configuration>
+                          <path>/${project.build.finalName}</path>
+                          <enableNaming>false</enableNaming>
+                          <finalName>${project.build.finalName}.jar</finalName>
+                          <charset>utf-8</charset>
+                      </configuration>
+                  </execution>
+              </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 	
 	<dependencies>
 		<dependency>
@@ -88,12 +117,13 @@
 			<version>2.9.0</version>
 		</dependency>
 		 -->
-		
+		<!-- 
 		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>mail</artifactId>
 			<version>1.4.7</version>
 		</dependency>
+     -->
 		
 		
 		<!-- 
