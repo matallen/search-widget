@@ -93,12 +93,13 @@ public class Controller2{
   }
   
   private Integer priority(Document d){
-    if (d.name.toLowerCase().contains("offering page")) return 0;
-    if (d.name.toLowerCase().contains("overview")) return 0+d.name.length();
-    if (d.name.toLowerCase().contains("definition")) return 100;
-    if (d.name.toLowerCase().contains("datasheet")) return 200;
-    if (d.name.toLowerCase().contains("slide")) return 300;
-    if (d.name.toLowerCase().contains("task")) return 400;
+  	if (d.name.toLowerCase().contains("offering page")) return 0;
+    if (d.name.toLowerCase().contains("overview")) return 1+d.name.length();
+    if (d.name.toLowerCase().contains("sales kit")) return 100;
+    if (d.name.toLowerCase().contains("definition")) return 200;
+    if (d.name.toLowerCase().contains("datasheet")) return 300;
+    if (d.name.toLowerCase().contains("slide")) return 400;
+    if (d.name.toLowerCase().contains("task")) return 500;
     return 100+d.name.length();
   }
   
@@ -550,7 +551,9 @@ public class Controller2{
       
       // check name is not too long, if it is then truncate it
       if (name.length()>30){
-      	name=name.substring(0, name.indexOf(" ", 30))+"...";
+      	int to=name.indexOf(" ", 30); // next space after 30 chars
+      	if (to<0) to=name.length();// if there's no space after 30 chars then just go to the end
+      	name=name.substring(0, to)+"...";
       }
       
       String id=null;
