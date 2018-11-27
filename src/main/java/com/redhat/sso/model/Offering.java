@@ -8,7 +8,7 @@ public class Offering{
   public String description;
   public String type;
   public List<String> relatedProducts=new ArrayList<String>();
-  public List<Solution> relatedSolutions=new ArrayList<Solution>();
+  public List<Document> relatedSOP=new ArrayList<Document>();
   public List<Document> documents=new ArrayList<Document>();
   
   public String getType()                    {return type;}
@@ -16,5 +16,5 @@ public class Offering{
   public String getDescription()             {return description;}
   public List<Document> getDocuments()       {return documents;}
   public List<String> getRelatedProducts()   {return relatedProducts;}
-  public List<Solution> getRelatedSolutions(){return relatedSolutions;}
+  public List<Document> getRelatedSOP()      {return relatedSOP;}
 }
