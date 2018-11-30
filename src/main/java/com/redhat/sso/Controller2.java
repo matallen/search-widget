@@ -49,7 +49,7 @@ public class Controller2{
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
     System.setProperty("username", "sa_offering_search");
     System.setProperty("password", "RspvYYReEoo=");
-    List<Offering> result=new Controller2().search("sso_searchable2", "tags,subject,content", "offering_");
+    List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
 
@@ -222,6 +222,7 @@ public class Controller2{
         	}else{
         		o.documents.add(overview);
         	}
+        	overview.description="";
         	
 //        	int s=overview.description.indexOf("<div id=\"jive-breadcrumb\" ");
 //        	int e=overview.description.indexOf("</div>", s+1);
@@ -284,28 +285,28 @@ public class Controller2{
             }
           }
           
-          log.debug("Overview ("+o.offering+") type="+o.type);
-          
           // find the related docs using the groupTag
           for (Document d:alldocuments){
-            if (d.tags.contains(groupTag)){
-              d.name=StrParse.get(d.name).leftOf("-").trim();
-              d.description="";
-              log.debug("Overview ("+o.offering+"):: Adding (Mojo) document -> ("+d.id+")"+d.name);
-              o.documents.add(d);
-              remove.add(d);
-            }
+          	if (d.tags.contains(groupTag)){
+          		d.name=StrParse.get(d.name).leftOf("-").trim();
+          		d.description="";
+          		log.debug("Overview ("+o.offering+"):: Adding (Mojo) document -> ("+d.id+")"+d.name);
+          		o.documents.add(d);
+          		remove.add(d);
+          	}
           }
           alldocuments.removeAll(remove); remove.clear();
-          
-          // re-order the documents in alphabetical order
-          Collections.sort(o.documents, new Comparator<Document>(){
-            public int compare(Document o1, Document o2){
-              return priority(o1).compareTo(priority(o2));
-            }});
-          
-          offerings.add(o);
         }
+          
+        log.debug("Overview ("+o.offering+") type="+o.type);
+        
+        // re-order the documents in alphabetical order
+        Collections.sort(o.documents, new Comparator<Document>(){
+          public int compare(Document o1, Document o2){
+            return priority(o1).compareTo(priority(o2));
+          }});
+        
+        offerings.add(o);
         
         //// NEW - this creates the list of offerings in the "associated with" column
         //if ("solution".equalsIgnoreCase(o.type)){
