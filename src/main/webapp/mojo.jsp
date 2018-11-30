@@ -220,7 +220,7 @@ $(document).ready(function() {
         "columns": [
             { "data": "type", "className": "typeColumn" },
             { "data": "offering", "className": "offeringColumn" },
-            { "data": "relatedSOP", "className": "relatedSolutionsColumn"},
+            { "data": "related", "className": "relatedSolutionsColumn"},
             { "data": "relatedProducts", "className": "relatedProductsColumn"},
             { "data": "documents", "className": "documentsColumn" }
         ],
@@ -245,7 +245,7 @@ $(document).ready(function() {
         	{ "targets": 2, "orderable": false, "render": function (data,type,row){ // SOLUTIONS
 	        	//var list=row['relatedSolutions'];
 	        	//return displayList(list);
-      			var list=row["relatedSOP"];
+      			var list=row["related"];
       			var html="";
       			
       			if (undefined != row['type'] && list.length>0){

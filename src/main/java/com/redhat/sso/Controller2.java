@@ -47,9 +47,9 @@ public class Controller2{
   private static final Logger log=Logger.getLogger(Controller2.class);
 
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
-    System.setProperty("username", "REDACTED");
-    System.setProperty("password", "REDACTED");
-    List<Offering> result=new Controller2().search("community_offering", "tags,subject,content", "offering_");
+    System.setProperty("username", "sa_offering_search");
+    System.setProperty("password", "RspvYYReEoo=");
+    List<Offering> result=new Controller2().search("sso_searchable2", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
 
@@ -194,90 +194,141 @@ public class Controller2{
         
         o.type=extractType(overview);
         
-        // NEW - this creates the list of offerings in the "associated with" column
+        // PROGRAM
+        if ("program".equalsIgnoreCase(o.type)){
+          // get data from sales kit landing pages
+        	
+        }
+
+        // SOLUTION
         if ("solution".equalsIgnoreCase(o.type)){
-        	// look up all other overview docs for the same "solution_?" tag and add it as a link in the relatedSOP's list
-        	for(String tag:overview.tags){
-        		if (tag.startsWith("solution_")){
-        			for (Document d:overviews){
-        				if (d.tags.contains(tag) && overview.id!=d.id /* ie. not the current overview doc */){
-        					o.relatedSOP.add(new Document(null, StrParse.get(d.name).rightOf("-"), null, d.url, null));
-//        					o.relatedSOP.add(d);
-        				}
-        			}
-        		}
+        	// get data from sales kit landing pages
+        	o.offering=Jsoup.parse(StrParse.get(overview.name).leftOf("-").trim()).text();
+        	overview.name="Sales Kit";
+        	o.description=extractDescription2(overview, overview.description);
+        	o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"OFFERINGS"}));
+        	o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"STANDARD OFFERINGS"}));
+        	o.relatedProducts.addAll(extractSectionListToStrings("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"TRAINING"}));
+        	
+        	
+        	int s=overview.description.indexOf("class=\"url\" ");
+        	int e=overview.description.indexOf("</span", s+1);
+        	String urlAreaIsh=overview.description.substring(s, e);
+        	Matcher m=Pattern.compile(".*href=\"(.+?)\".*").matcher(urlAreaIsh);
+        	if (m.find()){
+        		String newUrl=Jsoup.parse(m.group(1)).text();
+//        		System.out.println(newUrl);
+        		o.documents.add(new Document(null, "Sales Kit", null, newUrl, null));
+        	}else{
+        		o.documents.add(overview);
         	}
+        	
+//        	int s=overview.description.indexOf("<div id=\"jive-breadcrumb\" ");
+//        	int e=overview.description.indexOf("</div>", s+1);
+//        	String breadcrumbArea=overview.description.substring(s, e);
+//        	Matcher m=Pattern.compile(".+id=\"jive-breadcrumb\".+?>.*?(<a.+</a>).+").matcher(breadcrumbArea);
+//        	if (m.find()){
+//        		// should only find one
+//        		String allBreadcrumbUrls=Jsoup.parse(m.group(1)).text();
+//        		String[] breadcrumbUrls=allBreadcrumbUrls.split(">");
+//        		String url=breadcrumbUrls[breadcrumbUrls.length-2]; //get the penultimate one
+//        		System.out.println(url);
+//        	}
+//        	int s=overview.description.indexOf("id=\"jive-breadcrumb\"");
+//        	s=overview.description.indexOf(">",s+1);
+//        	int e=
+        	
         }
         
-        // NEW - this adds all simarly tagged solutions as "associated with" documents for this offering
+        // OFFERING
         if (o.type.contains("_offering")){
-        	for(String tag:overview.tags){
-        		
-        	}
-        }
-        
-        
-        int docTitlePosition=Math.max(overview.name.toLowerCase().indexOf("overview"), overview.name.toLowerCase().indexOf(" page"));
-        if (overview.name.indexOf("-")>docTitlePosition){
-        	o.offering=StrParse.get(overview.name).rightOf("-").trim();
-        	overview.name=StrParse.get(overview.name).leftOf("-").trim();
-        }else{
-        	o.offering=StrParse.get(overview.name).leftOf("-").trim();
-        	overview.name=StrParse.get(overview.name).rightOf("-").trim();
-        }
-        
-//        o.offering=StrParse.get(overview.name).rightOf("-").trim();
-        o.description=extractDescription(overview, overview.description, new String[]{"DESCRIPTION:", "Description:"});
-        
-  //      System.out.println("configs: "+truncate.size());
-        if (truncate.containsKey("offering") && o.offering.length()>Integer.parseInt(truncate.get("offering")))
-          o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")))+"...";
-        
-        if (truncate.containsKey("description") && o.description.length()>Integer.parseInt(truncate.get("description")))
-          o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")))+"...";
-        
-        o.relatedProducts.addAll(extractHtmlList(overview, overview.description, new String[]{"PRODUCTS &amp; TRAINING:","Products &amp; Training:", "PRODUCTS USED:"}));
-  //      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
-        
-        o.relatedSOP.addAll(genericExtractListFromSection(overview, overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
-        o.relatedSOP.addAll(genericExtractListFromSection(overview, overview.description, new String[]{"RELATED OFFERINGS:","Related Offerings:"}));
-        
-        //now, if the overview has a "Related Documents" section, then append those links too
-        o.documents.addAll(extractOtherDocuments2(overview, overview.description, new String[]{"OTHER MATERIALS:", "Other Materials:"}));
-        
-//        overview.name=StrParse.get(overview.name).leftOf("-").trim();
-        overview.description="";
-        
-        o.documents.add(overview);
-        String groupTag="";
-        // find the offering tag to hunt down the related docs
-        for(String tag:overview.tags){
-          if (tag.startsWith(groupBy)){
-            groupTag=tag; break;
+        	// get data from overview pages
+        	
+        	int docTitlePosition=Math.max(overview.name.toLowerCase().indexOf("overview"), overview.name.toLowerCase().indexOf(" page"));
+          if (overview.name.indexOf("-")>docTitlePosition){
+          	o.offering=StrParse.get(overview.name).rightOf("-").trim();
+          	overview.name=StrParse.get(overview.name).leftOf("-").trim();
+          }else{
+          	o.offering=StrParse.get(overview.name).leftOf("-").trim();
+          	overview.name=StrParse.get(overview.name).rightOf("-").trim();
           }
-        }
-        
-        log.debug("Overview ("+o.offering+") type="+o.type);
-        
-        // find the related docs using the groupTag
-        for (Document d:alldocuments){
-          if (d.tags.contains(groupTag)){
-            d.name=StrParse.get(d.name).leftOf("-").trim();
-            d.description="";
-            log.debug("Overview ("+o.offering+"):: Adding (Mojo) document -> ("+d.id+")"+d.name);
-            o.documents.add(d);
-            remove.add(d);
+          
+//          o.offering=StrParse.get(overview.name).rightOf("-").trim();
+          o.description=extractDescription(overview, overview.description, new String[]{"DESCRIPTION:", "Description:"});
+          
+    //      System.out.println("configs: "+truncate.size());
+          if (truncate.containsKey("offering") && o.offering.length()>Integer.parseInt(truncate.get("offering")))
+            o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")))+"...";
+          
+          if (truncate.containsKey("description") && o.description.length()>Integer.parseInt(truncate.get("description")))
+            o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")))+"...";
+          
+          o.relatedProducts.addAll(extractHtmlList(overview, overview.description, new String[]{"PRODUCTS &amp; TRAINING:","Products &amp; Training:", "PRODUCTS USED:"}));
+    //      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
+          
+          o.related.addAll(extractSectionListToDocuments("<[Hh]\\d>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
+          o.related.addAll(extractSectionListToDocuments("<[Hh]\\d>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED OFFERINGS:","Related Offerings:"}));
+          
+          //now, if the overview has a "Related Documents" section, then append those links too
+          o.documents.addAll(extractOtherDocuments2(overview, overview.description, new String[]{"OTHER MATERIALS:", "Other Materials:"}));
+          
+//          overview.name=StrParse.get(overview.name).leftOf("-").trim();
+          overview.description="";
+          
+          o.documents.add(overview);
+          String groupTag="";
+          // find the offering tag to hunt down the related docs
+          for(String tag:overview.tags){
+            if (tag.startsWith(groupBy)){
+              groupTag=tag; break;
+            }
           }
+          
+          log.debug("Overview ("+o.offering+") type="+o.type);
+          
+          // find the related docs using the groupTag
+          for (Document d:alldocuments){
+            if (d.tags.contains(groupTag)){
+              d.name=StrParse.get(d.name).leftOf("-").trim();
+              d.description="";
+              log.debug("Overview ("+o.offering+"):: Adding (Mojo) document -> ("+d.id+")"+d.name);
+              o.documents.add(d);
+              remove.add(d);
+            }
+          }
+          alldocuments.removeAll(remove); remove.clear();
+          
+          // re-order the documents in alphabetical order
+          Collections.sort(o.documents, new Comparator<Document>(){
+            public int compare(Document o1, Document o2){
+              return priority(o1).compareTo(priority(o2));
+            }});
+          
+          offerings.add(o);
         }
-        alldocuments.removeAll(remove); remove.clear();
         
-        // re-order the documents in alphabetical order
-        Collections.sort(o.documents, new Comparator<Document>(){
-          public int compare(Document o1, Document o2){
-            return priority(o1).compareTo(priority(o2));
-          }});
+        //// NEW - this creates the list of offerings in the "associated with" column
+        //if ("solution".equalsIgnoreCase(o.type)){
+        //	// look up all other overview docs for the same "solution_?" tag and add it as a link in the relatedSOP's list
+        //	for(String tag:overview.tags){
+        //		if (tag.startsWith("solution_")){
+        //			for (Document d:overviews){
+        //				if (d.tags.contains(tag) && overview.id!=d.id /* ie. not the current overview doc */){
+        //					o.related.add(new Document(null, StrParse.get(d.name).rightOf("-"), null, d.url, null));
+        //				}
+        //			}
+        //		}
+        //	}
+        //}
+        //
+        //// NEW - this adds all similarly tagged solutions as "associated with" documents for this offering
+        //if (o.type.contains("_offering")){
+        //	for(String tag:overview.tags){
+        //		
+        //	}
+        //}
         
-        offerings.add(o);
+        
       }
         
     }
@@ -356,6 +407,7 @@ public class Controller2{
     }
     return result;
   }
+  
   private String extract(Document src, String descriptionHtml, String[] tokensInOrder){
     descriptionHtml=descriptionHtml.replaceAll("&#160;", " ");
     String token=null;
@@ -385,6 +437,18 @@ public class Controller2{
 //    System.out.println("DESCRIPTION = "+result);
     
     return result;
+  }
+  
+  private String extractDescription2(Document src, String descriptionHtml){
+  	// find span with class="description", extract all text within that span
+  	int s=descriptionHtml.indexOf("class=\"description\"");
+  	s=descriptionHtml.indexOf(">", s+1);
+  	
+  	//Matcher m=Pattern.compile("<.*span.*?class=\"description\".*?>(.+?)</span>").matcher(descriptionHtml);
+  	
+  	int e=descriptionHtml.indexOf("</span>", s);
+  	String result=descriptionHtml.substring(s+1, e);
+  	return Jsoup.parse(result).text();
   }
   
   private String extractDescription(Document src, String descriptionHtml, String[] tokensInOrder){
@@ -619,8 +683,87 @@ public class Controller2{
   }
 
   
-  private List<Document> genericExtractListFromSection(Document src, String html, String[] tokensInOrder){
-    Matcher m=Pattern.compile("<[Hh]\\d>(.+?)</[Hh]\\d>").matcher(html);
+//  private List<String> extractListFromSection(String matcher, String[] tokensInOrder, Document src){
+//  	
+//  }
+    
+//  private List<Document> genericExtractListFromSection(String html, String[] tokensInOrder){
+//  	return genericExtractListFromSection("<[Hh]\\d>(.+?)</[Hh]\\d>", html, tokensInOrder);
+//  }
+  
+  private List<String> extractSectionListToStrings(String matcher, String html, String[] tokensInOrder){
+  	Matcher m=Pattern.compile(matcher).matcher(html);
+    int sectStart=-1;
+    int sectEnd=html.length();
+    List<String> tokens=Arrays.asList(tokensInOrder);
+    
+    while(m.find()){
+      String headerTitle=Jsoup.parse(m.group(1)).text().trim();
+      if (tokens.contains(headerTitle)){ // you've found a matching header
+        sectStart=m.start();
+        if (m.find())
+          sectEnd=m.start();
+      }
+    }
+    
+    if (sectStart<0) return new ArrayList<String>();
+    
+ // cut just the section we're interested in (the h1 to next start of h1 or end of doc if there is no more sections)
+    String htmlSubsection=html.substring(sectStart, sectEnd);
+    
+    int ulStart=-1;
+    ulStart=indexOf(htmlSubsection, "<[UL|ul].*>");
+    
+    if (ulStart<0) return new ArrayList<String>(); // exit early if we cant find a list
+    
+    int ulEnd=indexOf(htmlSubsection, "</[Uu][Ll].*>");
+    
+    String ul=htmlSubsection.substring(ulStart, ulEnd+"</ul>".length());// cut the list section so we can parse it easier
+    
+    List<String> result=new ArrayList<String>();
+    
+    Matcher m2=LI_ITERATOR_REGEX.matcher(ul);
+    while (m2.find()){
+      String item=m2.group(1);
+      String name="";
+      String url=null;
+      if (item.indexOf("<a ")>=0){
+        int hrefStart=item.indexOf("href=")+"href=".length()+1;
+        url=item.substring(hrefStart, item.indexOf("\"", hrefStart));
+      }
+      name=Jsoup.parse(item).text().toString().trim();
+      
+      // check name is not too long, if it is then truncate it
+      if (name.length()>30){
+      	int to=name.indexOf(" ", 30); // next space after 30 chars
+      	if (to<0){
+      		to=name.length();// if there's no space after 30 chars then just go to the end
+      	}else
+      		name=name.substring(0, to)+"...";
+      }
+      
+      String id=null;
+      String description=null;
+      List<Object> tags=null;
+//      log.debug("Overview ("+o.offering+"):: Adding (Other Materials) document -> ("+url+")"+name);
+      
+      result.add("<a href='"+url+"'>"+name+"</a>");
+      
+//      result.add(new Document(id, name, description, url, tags));
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Looks through each header matching the "matcher" regex and tries to find the "tokens" (potential header titles). If it finds on then it looks for the next <ul> and parses that list only 
+   * @param matcher
+   * @param html
+   * @param tokensInOrder
+   * @return
+   */
+  private List<Document> extractSectionListToDocuments(String matcher, String html, String[] tokensInOrder){
+    Matcher m=Pattern.compile(matcher).matcher(html);
     int sectStart=-1;
     int sectEnd=html.length();
     List<String> tokens=Arrays.asList(tokensInOrder);
