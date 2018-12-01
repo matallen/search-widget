@@ -246,7 +246,7 @@ public class Controller2{
         	// get data from overview pages
         	
         	int docTitlePosition=Math.max(overview.name.toLowerCase().indexOf("overview"), overview.name.toLowerCase().indexOf(" page"));
-          if (overview.name.indexOf("-")>docTitlePosition){
+          if (overview.name.lastIndexOf("-")>docTitlePosition){
           	o.offering=StrParse.get(overview.name).rightOf("-").trim();
           	overview.name=StrParse.get(overview.name).leftOf("-").trim();
           }else{
