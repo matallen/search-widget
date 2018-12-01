@@ -300,6 +300,11 @@ public class Controller2{
           
         log.debug("Overview ("+o.offering+") type="+o.type);
         
+        // truncate all document names
+        for(Document d:o.documents)
+        	d.name=truncate(d.name, 30);
+        
+        
         // re-order the documents in alphabetical order
         Collections.sort(o.documents, new Comparator<Document>(){
           public int compare(Document o1, Document o2){
@@ -667,11 +672,13 @@ public class Controller2{
       name=Jsoup.parse(item).text().toString().trim();
       
       // check name is not too long, if it is then truncate it
-      if (name.length()>30){
-      	int to=name.indexOf(" ", 30); // next space after 30 chars
-      	if (to<0) to=name.length();// if there's no space after 30 chars then just go to the end
-      	name=name.substring(0, to)+"...";
-      }
+      name=truncate(name,30);
+      
+      //if (name.length()>30){
+      //	int to=name.indexOf(" ", 30); // next space after 30 chars
+      //	if (to<0) to=name.length();// if there's no space after 30 chars then just go to the end
+      //	name=name.substring(0, to)+"...";
+      //}
       
       String id=null;
       String description=null;
@@ -681,6 +688,16 @@ public class Controller2{
     }
     
     return result;
+  }
+  
+  private String truncate(String input, Integer length){
+    // check input is not too long, if it is then truncate it
+    if (input.length()>length){
+    	int to=input.indexOf(" ", length); // next space after 30 chars
+    	if (to<0) to=input.length();// if there's no space after 30 chars then just go to the end
+    	input=input.substring(0, to)+"...";
+    }
+    return input;
   }
 
   

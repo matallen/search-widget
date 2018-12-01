@@ -9,14 +9,14 @@ public class StrParse{
     return new StrParse(value);
   }
   public String rightOf(String separator){
-    if (value.indexOf(separator)>=0){
-      return value.substring(value.indexOf(separator)+1);
+    if (value.lastIndexOf(separator)>=0){
+      return value.substring(value.lastIndexOf(separator)+1);
     }else
       return value;
   }
   public String leftOf(String separator){
-    if (value.indexOf("-")>=0){
-      return value.substring(0, value.indexOf(separator)-1);
+    if (value.lastIndexOf("-")>=0){
+      return value.substring(0, value.lastIndexOf(separator)-1);
     }else
       return value;
   }

@@ -188,25 +188,13 @@ d.trigger("activate.bs.scrollspy")},b.prototype.clear=function(){a(this.selector
 
 //var baseUrl="https://search-widget-search-widget-dev.6923.rh-us-east-1.openshiftapps.com";
 var baseUrl="http://localhost:8082";
-
 //var baseUrl="https://search-widget-mojo-search-widget.1d35.starter-us-east-1.openshiftapps.com"
-//var baseUrl="https://search-widget-mojo-search-widget.apps.d2.casl.rht-labs.com";
 
-//function typeToIcon(s){
-//	if (s=='program') return "sphere-letter";
-//	if (s=='solution') return "cube-letter";
-//	if (s.includes('offering')) return "pyramid-letter";
-//}
 
 $(document).ready(function() {
     $('#example').DataTable( {
         "ajax": {
             "url": baseUrl+"/search-widget/api/search?filter=sso_searchable",
-            //"url": baseUrl+"/search-widget/api/search?filter=sso_searchable",
-            
-            //"url": "https://search-widget-https-mallen1.7e14.starter-us-west-2.openshiftapps.com/search-widget/api/search/grouped2?filter=sso_searchable",
-            //"url": "https://solutiontools.co.uk:8443/search-widget/api/search?filter=sso_searchable",
-            //"url": "http://localhost:8082/search-widget/api/search/grouped2?filter=sso_searchable",
             "dataSrc": ""
         },
         "scrollY":        "660px",
@@ -228,108 +216,84 @@ $(document).ready(function() {
           $(row).addClass(data['type']);
         },
         "columnDefs":[
-        	{ "targets": 0, "type": "string", "orderable": true, "render": function (data,type,row){
-        	  if ("undefined" == typeof row['type']){
-        		  return row['type'];
-        		}else
-        		  //return "<img style=\"width:25px;\"src=\""+baseUrl+"/search-widget/"+row['type']+".png\" title=\""+row['type'].replace(new RegExp("_", 'g'), " ")+"\"/>";
-        			//return "<img style=\"width:25px;\"src=\""+baseUrl+"/search-widget/"+row['type']+".png\" title=\"services_"+row['type']+"\"/>";
-        			var type=(row['type'].includes('offering')?'offering':row['type']);
-        			//return "<img style=\"width:25px;\"src=\""+baseUrl+"/search-widget/"+type+".png\" title=\"services_"+type+"\"/>";
-        	  //return "<img style='height:50px' src=\""+baseUrl+"/search-widget/"+typeToIcon(type)+".png\" title=\"services_"+type+"\"/>";
-        	  return "<img style='display:none' src=\""+baseUrl+"/search-widget/"+type+".png\" title=\"services_"+type+"\"/>";
-        	}},
-        	{ "targets": 1, "orderable": true, "render": function (data,type,row){
-	        	return "<b>"+row['offering']+"</b><br/>"+row['description'];
-        	}},
-        	{ "targets": 2, "orderable": false, "render": function (data,type,row){ // SOLUTIONS
-	        	//var list=row['relatedSolutions'];
-	        	//return displayList(list);
-      			var list=row["related"];
-      			var html="";
-      			
-      			if (undefined != row['type'] && list.length>0){
-	      			if ("program" == row['type'])          html+="<strong>Solutions:</strong><br/>";
-	     				if ("solution" == row['type'])         html+="<strong>Offerings:</strong><br/>";
-	   					if (row['type'].includes("_offering")) html+="<strong>Solutions:</strong><br/>";
-      			}
-      			
-      			html+="<ul>";
-      			for (var i=0;i<list.length;i++){
-      			  if (list[i].url==undefined){
-      			  	//html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>"
-      			  	html+="<li>"+list[i].name+"</li>"
-      			  }else{
-	        			//html+="<li><a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
-	        			html+="<li><a href='"+list[i].url+"'>"+list[i].name+"</a></li>";
-      			  }
-      			}
-      			return html+"</ul>";
-        	}},
-        	{ "targets": 3, "orderable": false, "render": function (data,type,row){
-	        	var list=row['relatedProducts'];
-	        	return displayList(list);
-        	}},
-        	{ "targets": 4, "orderable": false, "render": function (data,type,row){ // DOCUMENTS
-      			var list=row["documents"];
-      			var html="";
-      			
-      			html+="<ul>";
-      			for (var i=0;i<list.length;i++){
-        			//html+=".";
-        			//html+=JSON.stringify(list[i]);
-        			if (list[i].url==undefined){
-        			  html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>";
-        			}else{
-        				html+="<li><a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
-        			}
-      			}
-      			return html+"</ul>";
-        	}}
+          { "targets": 0, "type": "string", "orderable": true, "render": function (data,type,row){
+            if ("undefined" == typeof row['type']){
+              return row['type'];
+            }else{
+              var type=(row['type'].includes('offering')?'offering':row['type']);
+              return "<img style='display:none' src=\""+baseUrl+"/search-widget/"+type+".png\" title=\"services_"+type+"\"/>";
+            }
+          }},
+          { "targets": 1, "orderable": true, "render": function (data,type,row){
+            return "<b>"+row['offering']+"</b><br/>"+row['description'];
+          }},
+          { "targets": 2, "orderable": false, "render": function (data,type,row){ // SOLUTIONS
+            var list=row["related"];
+            var html="";
+            
+            if (undefined != row['type'] && list.length>0){
+              if ("program" == row['type'])          html+="<strong>Solutions:</strong><br/>";
+               if ("solution" == row['type'])         html+="<strong>Offerings:</strong><br/>";
+               if (row['type'].includes("_offering")) html+="<strong>Solutions:</strong><br/>";
+            }
+            
+            html+="<ul>";
+            for (var i=0;i<list.length;i++){
+              if (list[i].url==undefined){
+                //html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>"
+                html+="<li>"+list[i].name+"</li>"
+              }else{
+                //html+="<li><a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
+                html+="<li><a href='"+list[i].url+"'>"+list[i].name+"</a></li>";
+              }
+            }
+            return html+"</ul>";
+          }},
+          { "targets": 3, "orderable": false, "render": function (data,type,row){
+            var list=row['relatedProducts'];
+            return displayList(list);
+          }},
+          { "targets": 4, "orderable": false, "render": function (data,type,row){ // DOCUMENTS
+            var list=row["documents"];
+            var html="";
+            
+            html+="<ul>";
+            for (var i=0;i<list.length;i++){
+              if (list[i].url==undefined){
+                html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>";
+              }else{
+                html+="<li><a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
+              }
+            }
+            return html+"</ul>";
+          }}
         ]
     } );
     
 
 } );
-	
-	function filterTable(value){
-		//$('#example_filter.label.input')
-		var table=$('#example').DataTable();
-    table.search(value).draw();
-	}
-	function displayList(list){
-		var result="<ul>";
-		for (var i=0;i<list.length;i++){
-			//result+="<li><a href='#' onclick='filterTable(\""+list[i]+"\")'>"+list[i]+"</a></li>";
-			result+="<li>"+list[i]+"</li>";
-		}
-		return result+"</ul>";
-	}
-	
-  function displayUrlNameList(list){
-		var result="";
-		for (var i=0;i<list.length;i++){
-			result+="<a href='"+list[i].url+"'>"+list[i].name+"</a><br/>";
-		}
-		return result;
+
+function filterTable(value){
+  var table=$('#example').DataTable();
+  table.search(value).draw();
+}
+function displayList(list){
+  var result="<ul>";
+  for (var i=0;i<list.length;i++){
+    result+="<li>"+list[i]+"</li>";
   }
+  return result+"</ul>";
+}
+
+function displayUrlNameList(list){
+  var result="";
+  for (var i=0;i<list.length;i++){
+    result+="<a href='"+list[i].url+"'>"+list[i].name+"</a><br/>";
+  }
+  return result;
+}
 
 
-
-//var filter="";
-//function filterit(filter){
-//  $('#example').DataTable().search(filter).draw();
-//}
-//
-//function checkit(value){
-//  if (filter.includes(value)){
-//    filter=filter.replace(value,"");
-//  }else{
-//    filter=filter+value;
-//  }
-//  filterit(filter);
-//}
-//var filterStr="";
 function checkit2(value){
   var filterStr=$('#example_filter label input').val();
   
@@ -337,25 +301,24 @@ function checkit2(value){
   var prot_i=0;
   var prot_max=10;
   while (filterStr.indexOf("services_")>=0){
-	  prot_i=prot_i+1;
-	  if (prot_i>prot_max) break;
-	  var s=filterStr.indexOf("services_");
-	  var searchFor=filterStr.substring(s, filterStr.indexOf(" ",s)<0?filterStr.length:filterStr.indexOf(" ",s));
-	  if (searchFor!=value){
-		  filterStr=filterStr.replace(searchFor,"");
-	  }
+    prot_i=prot_i+1;
+    if (prot_i>prot_max) break;
+    var s=filterStr.indexOf("services_");
+    var searchFor=filterStr.substring(s, filterStr.indexOf(" ",s)<0?filterStr.length:filterStr.indexOf(" ",s));
+    if (searchFor!=value){
+      filterStr=filterStr.replace(searchFor,"");
+    }
   }
   
   if (filterStr.includes(value)){
-		filterStr=filterStr.replace(value,"");
+    filterStr=filterStr.replace(value,"");
   }else{
-	  filterStr=filterStr+" "+value;
+    filterStr=filterStr+" "+value;
   }
-	//var str=filterStr+" "+$('#example_filter label input').val();
-	filterStr=filterStr.trim();
-	$('#example').DataTable().search(filterStr).draw();
-	//$('#example').DataTable().search("test").draw();
-	return false;
+  //var str=filterStr+" "+$('#example_filter label input').val();
+  filterStr=filterStr.trim();
+  $('#example').DataTable().search(filterStr).draw();
+  return false;
 }
 
 
@@ -373,36 +336,10 @@ $(window).on("resize", function () {
 
 
 $(document).ready(function(){
-	//document.getElementById("legend_program").src=baseUrl+"/search-widget/program.png";
-	//document.getElementById("legend_solution").src=baseUrl+"/search-widget/solution.png";
-	//document.getElementById("legend_offering").src=baseUrl+"/search-widget/offering.png";
-
-	//document.getElementById("legend_program").src=baseUrl+"/search-widget/sphere-letter.png";
-	//document.getElementById("legend_solution").src=baseUrl+"/search-widget/cube-letter.png";
-	//document.getElementById("legend_offering").src=baseUrl+"/search-widget/pyramid-letter.png";
 	
 });
 </script>
 <style>
-/*
-.ltext{
-  font-family: arial;
-  padding-left: 10px;
-  padding-right: 30px;
-}
-*/
-/*
-.limg{
-  width:20px;
-}
-*/
-/*
-.portfolio_offering{ background-color: #e0ecdf !important;}
-.standard_offering{ background-color: #e0ecdf !important;}
-.community_offering{ background-color: #e0ecdf !important;}
-.program{ background-color: #d5e4ef !important;}
-.solution{ background-color: red !important;}
-*/
 .limg{
 	height: 30px;
 }
@@ -457,146 +394,104 @@ function filter(str){
 	</table>
 </div>
 
-<!--
-<div style="position: relative; left: 300px;top:20px;width:900px;">
-	<a href="#" onclick="return checkit2('services_program')">            <span class="program">            <img class="limg" id="legend_program"/>   <span class="ltext">Program</span></span></a>
-	<a href="#" onclick="return checkit2('services_solution')">           <span class="solution">           <img class="limg" id="legend_solution"/>  <span class="ltext">Solution</span></span></a>
-	<a href="#" onclick="return checkit2('services_offering')">           <span class="offering">           <img class="limg" id="legend_offering"/>  <span class="ltext">Offering</span></span></a>
-</div>
--->
-	<!--
-	<a href="#" onclick="return filter('services_portfolio_offering')"> <span class="portfolio_offering"> <img class="limg" id="legend_portfolio"/> <span class="ltext">Portfolio Offering</span></span></a>
-	<a href="#" onclick="return filter('services_standard_offering')">  <span class="standard_offering">  <img class="limg" id="legend_standard"/>  <span class="ltext">Standard Offering</span></span></a>
-	<a href="#" onclick="return filter('services_community_offering')"> <span class="community_offering"> <img class="limg" id="legend_community"/> <span class="ltext">Community Offering</span></span></a>
-	-->
-
   <table id="example" class="display" cellspacing="0" width="100%">
-		        <thead>
-		            <tr class="headerRow">
-		                <th align="left"></th>
-		                <th align="left">Artifact</th>
-		                <th align="left">Associated with</th>
-		                <th align="left">Products&nbsp;&amp;&nbsp;Training</th>
-		                <th align="left">Content</th>
-		            </tr>
-		        </thead>
-		    </table>
-		    
-		    
-		    <style>
-		    #example_wrapper thead tr th:hover{
-		    	color: #ddd;
-		    }
-		    /*
-		    .even td a{
-		    	border:1px solid white;
-		    }
-		    .odd td a{
-		    	border:1px solid #eee;
-		    }
-		    */
-		    a{
-		    	/*
-		    	*/
-		    	text-decoration: none;
-		    	border-radius:3px;
-		    	padding:2px;
-		    	color: #333;
-		    	padding: 2px;
-		    }
-		    a:hover{
-		    	text-decoration: underline;
-		    	/*border:1px solid black;*/
-		    	border-radius:3px;
-		    	padding:2px;
-		    	color: #666;
-		    }
-		    
-		    #example_wrapper thead tr th{
-		    	padding: 10px;
-		    	background-color: #bbb;
-		    	color: white;
-		    	border: 1px solid grey;
-		    }
-		    .odd{
-		      background-color: #EFEFEF;
-		    }
-		    .headerRow th:hover{cursor: hand;}
-		    
-		    .typeColumn {
-		    /*
-		      border-top-left-radius: 4px;
-		      border-bottom-left-radius: 4px;
-		    */
-		    	width: 2%;
-		    }
-		    
-		    .offeringColumn {
-		    	width: 50%;
-		    }
-		    .relatedSolutionsColumn{
-		      width: 15%;
-		    }
-		    .relatedProductsColumn{
-		      width: 15%;
-		    }
-		    .relatedSolutionsColumn ul{ padding: 0; } /* remove bullets and indent where bullet would be*/
-		    .relatedSolutionsColumn ul li{
-		      list-style-type: none;
-		      padding: 1px;
-		    }
-		    .relatedProductsColumn ul li{
-		      padding: 1px;
-		    }
-		    .documentsColumn ul{ padding: 0; } /* remove bullets and indent where bullet would be*/
-		    .documentsColumn ul li{
-		      list-style-type: none;
-		      padding: 1px;
-		    }
-		    .documentsColumn{
-		    	width: 10%;
-		      border-top-right-radius: 4px;
-		      border-bottom-right-radius: 4px;
-		    }
-		    
-		    /* search box */
-				input{
-					border-radius: 25px;
-				  padding: 7px 14px;
-				  background-color: transparent;
-				  border: solid 1px rgba(0, 0, 0, 0.2);
-				  width: 200px;
-				  box-sizing: border-box;
-				  color: #2e2e2e;
-				  margin-bottom: 5px;
-				}
-		    #example_wrapper tbody tr td{
-		    	vertical-align:top;
-		    	/*
-		    	font-family: Arial;
-		    	*/
-		    	font-size: 11pt;
-		    	padding:7px;
-		    	border-bottom: 0.1em solid silver;
-		    }
-		    
-		    #example_filter{
-		      float: left;
-		      position: relative;
-		      top: -10px;
-		    }
-		    #example_filter input{
-		    	margin-left: 10px;
-		    }
-		    /*
-		    #example_length{
-		      float: left;
-		    }
-		    */
-		    #example_wrapper{
-		      font-family: Overpass;
-		    }
-		    </style>
-		    
-		    </div>
+            <thead>
+                <tr class="headerRow">
+                    <th align="left"></th>
+                    <th align="left">Artifact</th>
+                    <th align="left">Associated with</th>
+                    <th align="left">Products&nbsp;&amp;&nbsp;Training</th>
+                    <th align="left">Content</th>
+                </tr>
+            </thead>
+        </table>
+        
+        
+        <style>
+        #example_wrapper thead tr th:hover{
+          color: #ddd;
+        }
+        a{
+          text-decoration: none;
+          border-radius:3px;
+          padding:2px;
+          color: #333;
+          padding: 2px;
+        }
+        a:hover{
+          text-decoration: underline;
+          /*border:1px solid black;*/
+          border-radius:3px;
+          padding:2px;
+          color: #666;
+        }
+        
+        #example_wrapper thead tr th{
+          padding: 10px;
+          background-color: #bbb;
+          color: white;
+          border: 1px solid grey;
+        }
+        .odd{
+          background-color: #EFEFEF;
+        }
+        .headerRow th:hover{cursor: hand;}
+        
+        .typeColumn {							width: 2%; }
+        .offeringColumn {					width: 50%;}
+        .relatedSolutionsColumn{	width: 15%;}
+        .relatedProductsColumn{		width: 15%;}
+        .documentsColumn{					width: 15%;}
+        
+        .relatedSolutionsColumn ul{ padding: 0; } /* remove bullets and indent where bullet would be*/
+        .relatedSolutionsColumn ul li{
+          list-style-type: none;
+          padding: 1px;
+        }
+        .relatedProductsColumn ul li{
+          padding: 1px;
+        }
+        .documentsColumn ul{ padding: 0; } /* remove bullets and indent where bullet would be*/
+        .documentsColumn ul li{
+          list-style-type: none;
+          padding: 1px;
+        }
+        .documentsColumn{
+          width: 10%;
+          border-top-right-radius: 4px;
+          border-bottom-right-radius: 4px;
+        }
+        
+        /* search box */
+        input{
+          border-radius: 25px;
+          padding: 7px 14px;
+          background-color: transparent;
+          border: solid 1px rgba(0, 0, 0, 0.2);
+          width: 200px;
+          box-sizing: border-box;
+          color: #2e2e2e;
+          margin-bottom: 5px;
+        }
+        #example_wrapper tbody tr td{
+          vertical-align:top;
+          font-size: 11pt;
+          padding:7px;
+          border-bottom: 0.1em solid silver;
+        }
+        
+        #example_filter{
+          float: left;
+          position: relative;
+          top: -10px;
+        }
+        #example_filter input{
+          margin-left: 10px;
+        }
+        #example_wrapper{
+          font-family: Overpass;
+        }
+        </style>
+        
+        </div>
 </html>
