@@ -536,6 +536,7 @@ public class Controller2{
       if (li.indexOf("<a ")>=0){
         int hrefStart=li.indexOf("href=")+"href=".length()+1;
         String url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
+        li=li.replaceAll("&nbsp;", " ");
         item="<a href=\""+url+"\">"+Jsoup.parse(li).text().toString().trim()+"</a>";
       }else{
         item=Jsoup.parse(li).text().toString().trim();  
