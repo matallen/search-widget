@@ -38,6 +38,7 @@ import org.jsoup.Jsoup;
 import com.redhat.sso.model.Document;
 import com.redhat.sso.model.Offering;
 import com.redhat.sso.model.Solution;
+import com.redhat.sso.utils.RegExHelper;
 import com.redhat.sso.utils.StrParse;
 
 import mjson.Json;
@@ -49,7 +50,7 @@ public class Controller2{
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
     System.setProperty("username", "sa_offering_search");
     System.setProperty("password", "RspvYYReEoo=");
-    List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
+    List<Offering> result=new Controller2().search("sso_searchable3", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
 
@@ -199,7 +200,7 @@ public class Controller2{
           // get data from sales kit landing pages
         	
         }
-
+// class.*=.*\"url\".*?href=\"(.+?)\".*
         // SOLUTION
         if ("solution".equalsIgnoreCase(o.type)){
         	// get data from sales kit landing pages
@@ -210,15 +211,11 @@ public class Controller2{
         	o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"STANDARD OFFERINGS"}));
         	o.relatedProducts.addAll(extractSectionListToStrings("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"TRAINING"}));
         	
+//        	Matcher m=Pattern.compile("class.*=.*\"url\".*href=\"(.+?)\".*").matcher(overview.description);
         	
-        	int s=overview.description.indexOf("class=\"url\" ");
-        	int e=overview.description.indexOf("</span", s+1);
-        	String urlAreaIsh=overview.description.substring(s, e);
-        	Matcher m=Pattern.compile(".*href=\"(.+?)\".*").matcher(urlAreaIsh);
-        	if (m.find()){
-        		String newUrl=Jsoup.parse(m.group(1)).text();
-//        		System.out.println(newUrl);
-        		o.documents.add(new Document(null, "Sales Kit", null, newUrl, null));
+        	String url=RegExHelper.extract(overview.description, "<span.+?class=\\\"url\\\".*?>.*?<a.*?href=\\\"(.*?)\\\"");
+        	if (null!=url){
+        		o.documents.add(new Document(null, "Sales Kit", null, url, null));
         	}else{
         		o.documents.add(overview);
         	}
