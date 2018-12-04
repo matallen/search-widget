@@ -438,9 +438,9 @@ function filter(str){
         .headerRow th:hover{cursor: hand;}
         
         .typeColumn {							width: 2%; }
-        .offeringColumn {					width: 50%;}
-        .relatedSolutionsColumn{	width: 15%;}
-        .relatedProductsColumn{		width: 15%;}
+        .offeringColumn {					width: 40%;}
+        .relatedSolutionsColumn{	width: 20%;}
+        .relatedProductsColumn{		width: 25%;}
         .documentsColumn{					width: 15%;}
         
         .relatedSolutionsColumn ul{ padding: 0; } /* remove bullets and indent where bullet would be*/

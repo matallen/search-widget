@@ -299,7 +299,11 @@ public class Controller2{
         
         // truncate all document names
         for(Document d:o.documents)
-        	d.name=truncate(d.name, 30);
+        	d.name=truncateBefore(d.name, 30);
+        for(Document d:o.related)
+        	d.name=truncateBefore(d.name, 30);
+//        for(String d:o.relatedProducts)
+//        	d.name=truncateBefore(d.name, 30);
         
         
         // re-order the documents in alphabetical order
@@ -670,7 +674,7 @@ public class Controller2{
       name=Jsoup.parse(item).text().toString().trim();
       
       // check name is not too long, if it is then truncate it
-      name=truncate(name,30);
+//      name=truncate(name,30);
       
       //if (name.length()>30){
       //	int to=name.indexOf(" ", 30); // next space after 30 chars
@@ -688,7 +692,7 @@ public class Controller2{
     return result;
   }
   
-  private String truncate(String input, Integer length){
+  private String truncateAfter(String input, Integer length){
     // check input is not too long, if it is then truncate it
     if (input.length()>length){
     	int to=input.indexOf(" ", length); // next space after 30 chars
@@ -698,6 +702,19 @@ public class Controller2{
     return input;
   }
 
+  private String truncateBefore(String input, Integer length){
+    // check input is not too long, if it is then truncate it
+    if (input.length()>length){
+    	String tmp=input.substring(0, length); // last space before 30 chars
+    	String tmpr=new StringBuilder(tmp).reverse().toString();
+    	int tor=tmpr.indexOf(" ", tmpr.length()-length);
+    	int to=tmpr.length()-tor;
+    	
+    	if (to<0) to=input.length();// if there's no space after 30 chars then just go to the end
+    	input=input.substring(0, to).trim()+"...";
+    }
+    return input;
+  }
   
 //  private List<String> extractListFromSection(String matcher, String[] tokensInOrder, Document src){
 //  	
@@ -748,15 +765,18 @@ public class Controller2{
         url=item.substring(hrefStart, item.indexOf("\"", hrefStart));
       }
       name=Jsoup.parse(item).text().toString().trim();
+      name=Jsoup.parse(item).text().toString()
+      		.replaceAll("&nbsp;", "")
+      		.trim();
       
-      // check name is not too long, if it is then truncate it
-      if (name.length()>30){
-      	int to=name.indexOf(" ", 30); // next space after 30 chars
-      	if (to<0){
-      		to=name.length();// if there's no space after 30 chars then just go to the end
-      	}else
-      		name=name.substring(0, to)+"...";
-      }
+//      // check name is not too long, if it is then truncate it
+//      if (name.length()>30){
+//      	int to=name.indexOf(" ", 30); // next space after 30 chars
+//      	if (to<0){
+//      		to=name.length();// if there's no space after 30 chars then just go to the end
+//      	}else
+//      		name=name.substring(0, to)+"...";
+//      }
       
       String id=null;
       String description=null;
@@ -818,16 +838,20 @@ public class Controller2{
         int hrefStart=item.indexOf("href=")+"href=".length()+1;
         url=item.substring(hrefStart, item.indexOf("\"", hrefStart));
       }
-      name=Jsoup.parse(item).text().toString().trim();
+      name=Jsoup.parse(item).text().toString()
+      		.replaceAll("&nbsp;", "")
+      		.trim();
       
-      // check name is not too long, if it is then truncate it
-      if (name.length()>30){
-      	int to=name.indexOf(" ", 30); // next space after 30 chars
-      	if (to<0){
-      		to=name.length();// if there's no space after 30 chars then just go to the end
-      	}else
-      		name=name.substring(0, to)+"...";
-      }
+      
+      name=truncateBefore(name, 30);
+//      // check name is not too long, if it is then truncate it
+//      if (name.length()>30){
+//      	int to=name.indexOf(" ", 30); // next space after 30 chars
+//      	if (to<0){
+//      		to=name.length();// if there's no space after 30 chars then just go to the end
+//      	}else
+//      		name=name.substring(0, to)+"...";
+//      }
       
       String id=null;
       String description=null;
