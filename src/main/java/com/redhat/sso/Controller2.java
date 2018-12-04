@@ -50,7 +50,7 @@ public class Controller2{
   public static void main(String[] asd) throws JsonGenerationException, JsonMappingException, IOException{
     System.setProperty("username", "sa_offering_search");
     System.setProperty("password", "RspvYYReEoo=");
-    List<Offering> result=new Controller2().search("sso_searchable3", "tags,subject,content", "offering_");
+    List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
     System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
 
@@ -706,10 +706,7 @@ public class Controller2{
     // check input is not too long, if it is then truncate it
     if (input.length()>length){
     	String tmp=input.substring(0, length); // last space before 30 chars
-    	String tmpr=new StringBuilder(tmp).reverse().toString();
-    	int tor=tmpr.indexOf(" ", tmpr.length()-length);
-    	int to=tmpr.length()-tor;
-    	
+    	int to=tmp.lastIndexOf(" ");
     	if (to<0) to=input.length();// if there's no space after 30 chars then just go to the end
     	input=input.substring(0, to).trim()+"...";
     }
