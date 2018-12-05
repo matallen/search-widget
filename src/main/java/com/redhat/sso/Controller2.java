@@ -302,7 +302,8 @@ public class Controller2{
         	d.name=truncateBefore(d.name, 30);
         for(Document d:o.related)
         	d.name=truncateBefore(d.name, 30);
-//        for(String d:o.relatedProducts)
+        for(String d:o.relatedProducts)
+        	d=d.replaceAll("\\?", " ");
 //        	d.name=truncateBefore(d.name, 30);
         
         
