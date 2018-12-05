@@ -141,6 +141,7 @@ public class Controller2{
       result.add(new Document(
           arrayItem.at("id").asString(),
           arrayItem.at("subject").asString(),
+          null,
           arrayItem.at("content").at("text").asString(),
           arrayItem.at("resources").at("html").at("ref").asString(), //url
           arrayItem.at("tags").asList()
@@ -181,9 +182,9 @@ public class Controller2{
         o.documents.add(overview);
         
         String d1x=extract(overview, overview.description, new String[]{"COMMUNITY OFFERING DEFINITION DOCUMENT:"});
-        o.documents.add(new Document(null, "Offering Definition Document", null, d1x, null));
+        o.documents.add(new Document(null, "Offering Definition Document", null, null, d1x, null));
         String d2x=extract(overview, overview.description, new String[]{"SUPPORTING DOCUMENTATION:"});
-        o.documents.add(new Document(null, "Supporting Documentation", null, d2x, null));
+        o.documents.add(new Document(null, "Supporting Documentation", null, null, d2x, null));
         
         offerings.add(o);
         
@@ -200,8 +201,10 @@ public class Controller2{
           // get data from sales kit landing pages
         	
         }
-// class.*=.*\"url\".*?href=\"(.+?)\".*
-        // SOLUTION
+        
+        // ################
+        // ### SOLUTION ###
+        // ################
         if ("solution".equalsIgnoreCase(o.type)){
         	// get data from sales kit landing pages
         	o.offering=Jsoup.parse(StrParse.get(overview.name).leftOf("-").trim()).text();
@@ -215,30 +218,17 @@ public class Controller2{
         	
         	String url=RegExHelper.extract(overview.description, "<span.+?class=\\\"url\\\".*?>.*?<a.*?href=\\\"(.*?)\\\"");
         	if (null!=url){
-        		o.documents.add(new Document(null, "Sales Kit", null, url, null));
+        		o.documents.add(new Document(null, "Sales Kit", null, null, url, null));
         	}else{
         		o.documents.add(overview);
         	}
         	overview.description="";
         	
-//        	int s=overview.description.indexOf("<div id=\"jive-breadcrumb\" ");
-//        	int e=overview.description.indexOf("</div>", s+1);
-//        	String breadcrumbArea=overview.description.substring(s, e);
-//        	Matcher m=Pattern.compile(".+id=\"jive-breadcrumb\".+?>.*?(<a.+</a>).+").matcher(breadcrumbArea);
-//        	if (m.find()){
-//        		// should only find one
-//        		String allBreadcrumbUrls=Jsoup.parse(m.group(1)).text();
-//        		String[] breadcrumbUrls=allBreadcrumbUrls.split(">");
-//        		String url=breadcrumbUrls[breadcrumbUrls.length-2]; //get the penultimate one
-//        		System.out.println(url);
-//        	}
-//        	int s=overview.description.indexOf("id=\"jive-breadcrumb\"");
-//        	s=overview.description.indexOf(">",s+1);
-//        	int e=
-        	
         }
         
-        // OFFERING
+        // ################
+        // ### OFFERING ###
+        // ################
         if (o.type.contains("_offering")){
         	// get data from overview pages
         	
@@ -255,11 +245,11 @@ public class Controller2{
           o.description=extractDescription(overview, overview.description, new String[]{"DESCRIPTION:", "Description:"});
           
     //      System.out.println("configs: "+truncate.size());
-          if (truncate.containsKey("offering") && o.offering.length()>Integer.parseInt(truncate.get("offering")))
-            o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")))+"...";
+//          if (truncate.containsKey("offering") && o.offering.length()>Integer.parseInt(truncate.get("offering")))
+//            o.offering=o.offering.substring(0, Integer.parseInt(truncate.get("offering"))>o.offering.length()?o.offering.length():Integer.parseInt(truncate.get("offering")))+"...";
           
-          if (truncate.containsKey("description") && o.description.length()>Integer.parseInt(truncate.get("description")))
-            o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")))+"...";
+//          if (truncate.containsKey("description") && o.description.length()>Integer.parseInt(truncate.get("description")))
+//            o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")))+"...";
           
           o.relatedProducts.addAll(extractHtmlList(overview, overview.description, new String[]{"PRODUCTS &amp; TRAINING:","Products &amp; Training:", "PRODUCTS USED:"}));
     //      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
@@ -297,14 +287,24 @@ public class Controller2{
           
         log.debug("Overview ("+o.offering+") type="+o.type);
         
-        // truncate all document names
-        for(Document d:o.documents)
-        	d.name=truncateBefore(d.name, 30);
-        for(Document d:o.related)
-        	d.name=truncateBefore(d.name, 30);
+        
+        // ############################
+        // ### VALIDATE AND FINESSE ###
+        // ############################
+        if (o.description!=null)
+        		o.description=o.description.replaceAll("\\?", " ");
+        for(Document d:o.related){
+        	String fullName=d.name;
+        	d.name=truncateBefore(d.name, 40).replaceAll("\\?", " ");
+        	d.alt=fullName;
+        }
         for(String d:o.relatedProducts)
         	d=d.replaceAll("\\?", " ");
-//        	d.name=truncateBefore(d.name, 30);
+        for(Document d:o.documents){
+        	String fullName=d.name;        	
+        	d.name=truncateBefore(d.name, 30).replaceAll("\\?", " ");
+        	d.alt=fullName;
+        }
         
         
         // re-order the documents in alphabetical order
@@ -687,7 +687,7 @@ public class Controller2{
       String description=null;
       List<Object> tags=null;
 //      log.debug("Overview ("+o.offering+"):: Adding (Other Materials) document -> ("+url+")"+name);
-      result.add(new Document(id, name, description, url, tags));
+      result.add(new Document(id, name, null, description, url, tags));
     }
     
     return result;
@@ -841,7 +841,7 @@ public class Controller2{
       		.trim();
       
       
-      name=truncateBefore(name, 30);
+//      name=truncateBefore(name, 30);
 //      // check name is not too long, if it is then truncate it
 //      if (name.length()>30){
 //      	int to=name.indexOf(" ", 30); // next space after 30 chars
@@ -855,7 +855,7 @@ public class Controller2{
       String description=null;
       List<Object> tags=null;
 //      log.debug("Overview ("+o.offering+"):: Adding (Other Materials) document -> ("+url+")"+name);
-      result.add(new Document(id, name, description, url, tags));
+      result.add(new Document(id, name, null, description, url, tags));
     }
     
     return result;
