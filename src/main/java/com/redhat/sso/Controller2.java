@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
@@ -177,7 +179,12 @@ public class Controller2{
         o.offering=overview.name;
         o.description=extract(overview, overview.description, new String[]{"OFFERING OVERVIEW:"});
         o.type=extractType(overview);
-        o.relatedProducts=Arrays.asList(extract(overview, overview.description, new String[]{"PRODUCTS/TECHNOLOGY FOCUS:"}));
+//        o.relatedProducts=Arrays.asList(extract(overview, overview.description, new String[]{"PRODUCTS/TECHNOLOGY FOCUS:"}));
+        o.relatedProducts=extractSectionListToDocuments("<[Hh]\\d>(.+?)</[Hh]\\d>", overview.description, new String[]{"PRODUCTS/TECHNOLOGY FOCUS:"});
+//        o.relatedProducts=Arrays.asList(extract(overview, overview.description, new String[]{"PRODUCTS/TECHNOLOGY FOCUS:"}));
+        
+//        o.relatedProducts=extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"PRODUCTS/TECHNOLOGY FOCUS:"});
+        
         overview.name=StrParse.get(overview.name).rightOf(":").trim();
         o.documents.add(overview);
         
@@ -217,7 +224,10 @@ public class Controller2{
         	o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"OFFERINGS"}));
         	o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"STANDARD OFFERINGS"}));
         	o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED OFFERINGS"}));
-        	o.relatedProducts.addAll(extractSectionListToStrings("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"TRAINING"}));
+        	
+        	o.relatedProducts.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"TRAINING"}));
+        	
+//        	o.relatedProducts.addAll(extractSectionListToStrings("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"TRAINING"}));
         	
 //        	Matcher m=Pattern.compile("class.*=.*\"url\".*href=\"(.+?)\".*").matcher(overview.description);
         	
@@ -256,7 +266,9 @@ public class Controller2{
 //          if (truncate.containsKey("description") && o.description.length()>Integer.parseInt(truncate.get("description")))
 //            o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")))+"...";
           
-          o.relatedProducts.addAll(extractHtmlList(overview, overview.description, new String[]{"PRODUCTS &amp; TRAINING:","Products &amp; Training:", "PRODUCTS USED:"}));
+          o.relatedProducts.addAll(extractSectionListToDocuments("<[Hh]\\d>(.+?)</[Hh]\\d>", overview.description, new String[]{"PRODUCTS & TRAINING:","Products & Training:", "PRODUCTS USED:"}));
+          
+//          o.relatedProducts.addAll(extractHtmlList(overview, overview.description, new String[]{"PRODUCTS &amp; TRAINING:","Products &amp; Training:", "PRODUCTS USED:"}));
     //      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
           
           o.related.addAll(extractSectionListToDocuments("<[Hh]\\d>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
@@ -298,18 +310,14 @@ public class Controller2{
         // ############################
         if (o.description!=null)
         		o.description=o.description.replaceAll("\\?", " ");
-        for(Document d:o.related){
-        	String fullName=d.name;
+        for(Document d:Stream.concat(o.related.stream(), o.relatedProducts.stream()).collect(Collectors.toList())){
+        	d.alt=d.name;
         	d.name=truncateBefore(d.name, 40).replaceAll("\\?", " ");
-        	d.alt=fullName;
         	d.description=null; // clear this before sending to client-side
         }
-        for(String d:o.relatedProducts)
-        	d=d.replaceAll("\\?", " ");
         for(Document d:o.documents){
-        	String fullName=d.name;        	
+        	d.alt=d.name;
         	d.name=truncateBefore(d.name, 30).replaceAll("\\?", " ");
-        	d.alt=fullName;
         	d.description=null; // clear this before sending to client-side
         }
         

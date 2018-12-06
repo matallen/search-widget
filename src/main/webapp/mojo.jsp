@@ -246,35 +246,39 @@ $(document).ready(function() {
                if (row['type'].includes("_offering")) html+="<strong>Solutions:</strong><br/>";
             }
             
-            html+="<ul>";
-            for (var i=0;i<list.length;i++){
-              if (list[i].url==undefined){
-                //html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>"
-                html+="<li>"+list[i].name+"</li>"
-              }else{
-                //html+="<li><a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
-                html+="<li><a href='"+list[i].url+"' title='"+list[i].alt+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
-              }
-            }
-            return html+"</ul>";
+            return displayListOfDocs(row["related"]);
+            
+            //html+="<ul>";
+            //for (var i=0;i<list.length;i++){
+            //  if (list[i].url==undefined){
+            //    //html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>"
+            //	  html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>";
+            //  }else{
+            //    //html+="<li><a href='"+list[i].url+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
+            //    html+="<li><a href='"+list[i].url+"' title='"+list[i].alt+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
+            //  }
+            //}
+            //return html+"</ul>";
           }},
           { "targets": 3, "orderable": false, "render": function (data,type,row){
-            var list=row['relatedProducts'];
-            return displayList(list);
+            //var list=row['relatedProducts'];
+            return displayListOfDocs(row["relatedProducts"]);
+            //return displayList(list);
           }},
           { "targets": 4, "orderable": false, "render": function (data,type,row){ // DOCUMENTS
-            var list=row["documents"];
-            var html="";
-            
-            html+="<ul>";
-            for (var i=0;i<list.length;i++){
-              if (list[i].url==undefined){
-                html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>";
-              }else{
-                html+="<li><a href='"+list[i].url+"' title='"+list[i].alt+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
-              }
-            }
-            return html+"</ul>";
+        	  return displayListOfDocs(row["documents"]);
+            //var list=row["documents"];
+            //var html="";
+            //
+            //html+="<ul>";
+            //for (var i=0;i<list.length;i++){
+            //  if (list[i].url==undefined){
+            //    html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>";
+            //  }else{
+            //    html+="<li><a href='"+list[i].url+"' title='"+list[i].alt+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
+            //  }
+            //}
+            //return html+"</ul>";
           }}
         ]
     } );
@@ -282,6 +286,19 @@ $(document).ready(function() {
 
 } );
 
+function displayListOfDocs(list){
+  var html="";
+  
+  html+="<ul>";
+  for (var i=0;i<list.length;i++){
+    if (list[i].url==undefined){
+      html+="<li>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</li>";
+    }else{
+      html+="<li><a href='"+list[i].url+"' title='"+list[i].alt+"'>"+list[i].name.replace(new RegExp(" ", 'g'), "&nbsp;")+"</a></li>";
+    }
+  }
+  return html+"</ul>";
+}
 function filterTable(value){
   var table=$('#example').DataTable();
   table.search(value).draw();
