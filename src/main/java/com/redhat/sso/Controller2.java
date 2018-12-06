@@ -212,6 +212,7 @@ public class Controller2{
         	o.description=extractDescription2(overview, overview.description);
         	o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"OFFERINGS"}));
         	o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"STANDARD OFFERINGS"}));
+        	o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED OFFERINGS"}));
         	o.relatedProducts.addAll(extractSectionListToStrings("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"TRAINING"}));
         	
 //        	Matcher m=Pattern.compile("class.*=.*\"url\".*href=\"(.+?)\".*").matcher(overview.description);
