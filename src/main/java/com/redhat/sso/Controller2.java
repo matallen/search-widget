@@ -186,6 +186,10 @@ public class Controller2{
         String d2x=extract(overview, overview.description, new String[]{"SUPPORTING DOCUMENTATION:"});
         o.documents.add(new Document(null, "Supporting Documentation", null, null, d2x, null));
         
+        for(Document d:o.documents){
+        	d.description=null;
+        }
+        
         offerings.add(o);
         
       }else{
@@ -298,6 +302,7 @@ public class Controller2{
         	String fullName=d.name;
         	d.name=truncateBefore(d.name, 40).replaceAll("\\?", " ");
         	d.alt=fullName;
+        	d.description=null; // clear this before sending to client-side
         }
         for(String d:o.relatedProducts)
         	d=d.replaceAll("\\?", " ");
@@ -305,6 +310,7 @@ public class Controller2{
         	String fullName=d.name;        	
         	d.name=truncateBefore(d.name, 30).replaceAll("\\?", " ");
         	d.alt=fullName;
+        	d.description=null; // clear this before sending to client-side
         }
         
         

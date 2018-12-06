@@ -193,6 +193,8 @@ if (window.location.host.includes("localhost")){
 }else{
 	var baseUrl="https://search-widget-search-widget.6923.rh-us-east-1.openshiftapps.com";
 }
+
+console.log("Server = "+baseUrl);
 //var baseUrl="https://search-widget-search-widget.6923.rh-us-east-1.openshiftapps.com";
 //var baseUrl="http://localhost:8082";
 //var baseUrl="https://search-widget-mojo-search-widget.1d35.starter-us-east-1.openshiftapps.com"

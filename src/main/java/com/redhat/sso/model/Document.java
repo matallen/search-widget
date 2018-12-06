@@ -3,12 +3,14 @@ package com.redhat.sso.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 public class Document{
   public String id;
   public String name;
   public String alt;
 //  public String type;
-  public String description;
+  @JsonIgnore public String description;
   public String url;
   public List<String> tags;
   public String getId()            {return id;}
