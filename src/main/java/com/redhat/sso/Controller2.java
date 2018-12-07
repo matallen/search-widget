@@ -36,6 +36,7 @@ import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.jsoup.Jsoup;
+import org.jsoup.parser.Parser;
 
 import com.redhat.sso.model.Document;
 import com.redhat.sso.model.Offering;
@@ -314,6 +315,7 @@ public class Controller2{
         	d.alt=d.name;
         	d.name=truncateBefore(d.name, 40).replaceAll("\\?", " ");
         	d.description=null; // clear this before sending to client-side
+//        	System.out.println("Related/Products: name = "+d.name);
         }
         for(Document d:o.documents){
         	d.alt=d.name;
@@ -503,7 +505,9 @@ public class Controller2{
     }
     String description=descriptionHtml.substring(start, end); 
     
-    String result=Jsoup.parse(description, "UTF-8").text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
+    String result=Parser.unescapeEntities(Jsoup.parse(description).text().substring(token.length()), false).trim();
+    
+//    String result=Jsoup.parse(description).text().toString().substring(token.length()).trim(); // strip any html elements (inc the header/token
     
     // this is a hack to remove any non printable characters from the description that JSoup has poorly converted.
     StringBuffer sb=new StringBuffer(result);
@@ -519,100 +523,100 @@ public class Controller2{
       sb.append(s).append(", ");
     return sb.substring(0, sb.length()>2?sb.length()-2:0);
   }
-  private List<String> extractHtmlList(Document src, String html, String[] tokensInOrder){
-    String token=null;
-    int iDesc=-1;
-    for(String t:tokensInOrder){
-      if ((iDesc=html.indexOf(t))>=0){
-        token=t;
-        break;
-      }
-    }
-    
-//    int iDesc=descriptionHtml.indexOf(token);
-    if (iDesc<0){
-      log.error("Unable to find any \""+arrayToString(tokensInOrder)+"\" in document: "+src.getUrl());
-      return Arrays.asList("MISSING: \""+token+"\""); //abort early if the header token is not in the document
-    }
-    
-    int ulStart=html.indexOf("ul", iDesc);
-    int ulEnd=html.indexOf("/ul", ulStart);
-    
-    String ul=html.substring(ulStart, ulEnd);
-    // now just split by <li>
-    
-    List<String> result=new ArrayList<String>();
-    
-    //loop
-    int end=0;
-    int start=ul.indexOf("<li", end);
-    while (start>0){
-      end=ul.indexOf("</li>", start);
-      String li=ul.substring(start, end);
-      String item;
-      if (li.indexOf("<a ")>=0){
-        int hrefStart=li.indexOf("href=")+"href=".length()+1;
-        String url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
-        li=li.replaceAll("&nbsp;", " ");
-        item="<a href=\""+url+"\">"+Jsoup.parse(li).text().toString().trim()+"</a>";
-      }else{
-        item=Jsoup.parse(li).text().toString().trim();  
-      }
-//        li=li.substring(li.indexOf("<a "), li.indexOf("</a>")+"</a>".length()); // strip everything except for a link if it exists
-//      String item=Jsoup.parse(li).text().toString().trim();
-      result.add(item);
-      start=ul.indexOf("<li", end);
-    }
-    
-    return result;
-  }
-  
-  private List<Solution> extractSolutions(Document src, String descriptionHtml, String[] tokensInOrder){
-    String token=null;
-    int iDesc=-1;
-    for(String t:tokensInOrder){
-      if ((iDesc=descriptionHtml.indexOf(t))>=0){
-        token=t;
-        break;
-      }
-    }
-    
-//    int iDesc=descriptionHtml.indexOf(token);
-    if (iDesc<0){
-      log.error("Unable to find \""+arrayToString(tokensInOrder)+"\" in document: "+src.getUrl());
-      return Arrays.asList(new Solution("MISSING: \""+token+"\"", null)); //abort early if the header token is not in the document
-    }
-    
-    int ulStart=descriptionHtml.indexOf("ul", iDesc);
-    int ulEnd=descriptionHtml.indexOf("/ul", ulStart);
-    
-    String ul=descriptionHtml.substring(ulStart, ulEnd);
-    // now just split by <li>
-    
-    List<Solution> result=new ArrayList<Solution>();
-    
-    //loop
-    int end=0;
-    int start=ul.indexOf("<li", end);
-    while (start>0){
-      end=ul.indexOf("</li>", start);
-      String li=ul.substring(start, end);
-      String name="";
-      String url=null;
-      if (li.indexOf("<a ")>=0){
-        int hrefStart=li.indexOf("href=")+"href=".length()+1;
-        url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
+//  private List<String> extractHtmlList(Document src, String html, String[] tokensInOrder){
+//    String token=null;
+//    int iDesc=-1;
+//    for(String t:tokensInOrder){
+//      if ((iDesc=html.indexOf(t))>=0){
+//        token=t;
+//        break;
+//      }
+//    }
+//    
+////    int iDesc=descriptionHtml.indexOf(token);
+//    if (iDesc<0){
+//      log.error("Unable to find any \""+arrayToString(tokensInOrder)+"\" in document: "+src.getUrl());
+//      return Arrays.asList("MISSING: \""+token+"\""); //abort early if the header token is not in the document
+//    }
+//    
+//    int ulStart=html.indexOf("ul", iDesc);
+//    int ulEnd=html.indexOf("/ul", ulStart);
+//    
+//    String ul=html.substring(ulStart, ulEnd);
+//    // now just split by <li>
+//    
+//    List<String> result=new ArrayList<String>();
+//    
+//    //loop
+//    int end=0;
+//    int start=ul.indexOf("<li", end);
+//    while (start>0){
+//      end=ul.indexOf("</li>", start);
+//      String li=ul.substring(start, end);
+//      String item;
+//      if (li.indexOf("<a ")>=0){
+//        int hrefStart=li.indexOf("href=")+"href=".length()+1;
+//        String url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
+//        li=li.replaceAll("&nbsp;", " ");
 //        item="<a href=\""+url+"\">"+Jsoup.parse(li).text().toString().trim()+"</a>";
-      }
-      name=Jsoup.parse(li).text().toString().trim();  
-//        li=li.substring(li.indexOf("<a "), li.indexOf("</a>")+"</a>".length()); // strip everything except for a link if it exists
-//      String item=Jsoup.parse(li).text().toString().trim();
-      result.add(new Solution(name, url));
-      start=ul.indexOf("<li", end);
-    }
-    
-    return result;
-  }
+//      }else{
+//        item=Jsoup.parse(li).text().toString().trim();  
+//      }
+////        li=li.substring(li.indexOf("<a "), li.indexOf("</a>")+"</a>".length()); // strip everything except for a link if it exists
+////      String item=Jsoup.parse(li).text().toString().trim();
+//      result.add(item);
+//      start=ul.indexOf("<li", end);
+//    }
+//    
+//    return result;
+//  }
+  
+//  private List<Solution> extractSolutions(Document src, String descriptionHtml, String[] tokensInOrder){
+//    String token=null;
+//    int iDesc=-1;
+//    for(String t:tokensInOrder){
+//      if ((iDesc=descriptionHtml.indexOf(t))>=0){
+//        token=t;
+//        break;
+//      }
+//    }
+//    
+////    int iDesc=descriptionHtml.indexOf(token);
+//    if (iDesc<0){
+//      log.error("Unable to find \""+arrayToString(tokensInOrder)+"\" in document: "+src.getUrl());
+//      return Arrays.asList(new Solution("MISSING: \""+token+"\"", null)); //abort early if the header token is not in the document
+//    }
+//    
+//    int ulStart=descriptionHtml.indexOf("ul", iDesc);
+//    int ulEnd=descriptionHtml.indexOf("/ul", ulStart);
+//    
+//    String ul=descriptionHtml.substring(ulStart, ulEnd);
+//    // now just split by <li>
+//    
+//    List<Solution> result=new ArrayList<Solution>();
+//    
+//    //loop
+//    int end=0;
+//    int start=ul.indexOf("<li", end);
+//    while (start>0){
+//      end=ul.indexOf("</li>", start);
+//      String li=ul.substring(start, end);
+//      String name="";
+//      String url=null;
+//      if (li.indexOf("<a ")>=0){
+//        int hrefStart=li.indexOf("href=")+"href=".length()+1;
+//        url=li.substring(hrefStart, li.indexOf("\"", hrefStart));
+////        item="<a href=\""+url+"\">"+Jsoup.parse(li).text().toString().trim()+"</a>";
+//      }
+//      name=Jsoup.parse(li).text().toString().trim();  
+////        li=li.substring(li.indexOf("<a "), li.indexOf("</a>")+"</a>".length()); // strip everything except for a link if it exists
+////      String item=Jsoup.parse(li).text().toString().trim();
+//      result.add(new Solution(name, url));
+//      start=ul.indexOf("<li", end);
+//    }
+//    
+//    return result;
+//  }
   
   
   private Map<String, Pattern> regexCache=new HashMap<String, Pattern>();
@@ -687,7 +691,8 @@ public class Controller2{
         int hrefStart=item.indexOf("href=")+"href=".length()+1;
         url=item.substring(hrefStart, item.indexOf("\"", hrefStart));
       }
-      name=Jsoup.parse(item).text().toString().trim();
+//      name=Jsoup.parse(item).text().toString().trim();
+      name=Parser.unescapeEntities(Jsoup.parse(item).text(), false).trim();
       
       // check name is not too long, if it is then truncate it
 //      name=truncate(name,30);
@@ -737,72 +742,72 @@ public class Controller2{
 //  	return genericExtractListFromSection("<[Hh]\\d>(.+?)</[Hh]\\d>", html, tokensInOrder);
 //  }
   
-  private List<String> extractSectionListToStrings(String matcher, String html, String[] tokensInOrder){
-  	Matcher m=Pattern.compile(matcher).matcher(html);
-    int sectStart=-1;
-    int sectEnd=html.length();
-    List<String> tokens=Arrays.asList(tokensInOrder);
-    
-    while(m.find()){
-      String headerTitle=Jsoup.parse(m.group(1)).text().trim();
-      if (tokens.contains(headerTitle)){ // you've found a matching header
-        sectStart=m.start();
-        if (m.find())
-          sectEnd=m.start();
-      }
-    }
-    
-    if (sectStart<0) return new ArrayList<String>();
-    
- // cut just the section we're interested in (the h1 to next start of h1 or end of doc if there is no more sections)
-    String htmlSubsection=html.substring(sectStart, sectEnd);
-    
-    int ulStart=-1;
-    ulStart=indexOf(htmlSubsection, "<[UL|ul].*>");
-    
-    if (ulStart<0) return new ArrayList<String>(); // exit early if we cant find a list
-    
-    int ulEnd=indexOf(htmlSubsection, "</[Uu][Ll].*>");
-    
-    String ul=htmlSubsection.substring(ulStart, ulEnd+"</ul>".length());// cut the list section so we can parse it easier
-    
-    List<String> result=new ArrayList<String>();
-    
-    Matcher m2=LI_ITERATOR_REGEX.matcher(ul);
-    while (m2.find()){
-      String item=m2.group(1);
-      String name="";
-      String url=null;
-      if (item.indexOf("<a ")>=0){
-        int hrefStart=item.indexOf("href=")+"href=".length()+1;
-        url=item.substring(hrefStart, item.indexOf("\"", hrefStart));
-      }
-      name=Jsoup.parse(item).text().toString().trim();
-      name=Jsoup.parse(item).text().toString()
-      		.replaceAll("&nbsp;", "")
-      		.trim();
-      
-//      // check name is not too long, if it is then truncate it
-//      if (name.length()>30){
-//      	int to=name.indexOf(" ", 30); // next space after 30 chars
-//      	if (to<0){
-//      		to=name.length();// if there's no space after 30 chars then just go to the end
-//      	}else
-//      		name=name.substring(0, to)+"...";
+//  private List<String> extractSectionListToStrings(String matcher, String html, String[] tokensInOrder){
+//  	Matcher m=Pattern.compile(matcher).matcher(html);
+//    int sectStart=-1;
+//    int sectEnd=html.length();
+//    List<String> tokens=Arrays.asList(tokensInOrder);
+//    
+//    while(m.find()){
+//      String headerTitle=Jsoup.parse(m.group(1)).text().trim();
+//      if (tokens.contains(headerTitle)){ // you've found a matching header
+//        sectStart=m.start();
+//        if (m.find())
+//          sectEnd=m.start();
 //      }
-      
-      String id=null;
-      String description=null;
-      List<Object> tags=null;
-//      log.debug("Overview ("+o.offering+"):: Adding (Other Materials) document -> ("+url+")"+name);
-      
-      result.add("<a href='"+url+"'>"+name+"</a>");
-      
-//      result.add(new Document(id, name, description, url, tags));
-    }
-    
-    return result;
-  }
+//    }
+//    
+//    if (sectStart<0) return new ArrayList<String>();
+//    
+// // cut just the section we're interested in (the h1 to next start of h1 or end of doc if there is no more sections)
+//    String htmlSubsection=html.substring(sectStart, sectEnd);
+//    
+//    int ulStart=-1;
+//    ulStart=indexOf(htmlSubsection, "<[UL|ul].*>");
+//    
+//    if (ulStart<0) return new ArrayList<String>(); // exit early if we cant find a list
+//    
+//    int ulEnd=indexOf(htmlSubsection, "</[Uu][Ll].*>");
+//    
+//    String ul=htmlSubsection.substring(ulStart, ulEnd+"</ul>".length());// cut the list section so we can parse it easier
+//    
+//    List<String> result=new ArrayList<String>();
+//    
+//    Matcher m2=LI_ITERATOR_REGEX.matcher(ul);
+//    while (m2.find()){
+//      String item=m2.group(1);
+//      String name="";
+//      String url=null;
+//      if (item.indexOf("<a ")>=0){
+//        int hrefStart=item.indexOf("href=")+"href=".length()+1;
+//        url=item.substring(hrefStart, item.indexOf("\"", hrefStart));
+//      }
+//      name=Jsoup.parse(item).text().toString().trim();
+//      name=Jsoup.parse(item).text().toString()
+//      		.replaceAll("&nbsp;", "")
+//      		.trim();
+//      
+////      // check name is not too long, if it is then truncate it
+////      if (name.length()>30){
+////      	int to=name.indexOf(" ", 30); // next space after 30 chars
+////      	if (to<0){
+////      		to=name.length();// if there's no space after 30 chars then just go to the end
+////      	}else
+////      		name=name.substring(0, to)+"...";
+////      }
+//      
+//      String id=null;
+//      String description=null;
+//      List<Object> tags=null;
+////      log.debug("Overview ("+o.offering+"):: Adding (Other Materials) document -> ("+url+")"+name);
+//      
+//      result.add("<a href='"+url+"'>"+name+"</a>");
+//      
+////      result.add(new Document(id, name, description, url, tags));
+//    }
+//    
+//    return result;
+//  }
   
   /**
    * Looks through each header matching the "matcher" regex and tries to find the "tokens" (potential header titles). If it finds on then it looks for the next <ul> and parses that list only 
@@ -851,9 +856,10 @@ public class Controller2{
         int hrefStart=item.indexOf("href=")+"href=".length()+1;
         url=item.substring(hrefStart, item.indexOf("\"", hrefStart));
       }
-      name=Jsoup.parse(item).text().toString()
-      		.replaceAll("&nbsp;", "")
-      		.trim();
+//      name=Jsoup.parse(item).text().toString()
+//      		.replaceAll("&nbsp;", "")
+//      		.trim();
+      name=Parser.unescapeEntities(Jsoup.parse(item).text(), false).trim();
       
       
 //      name=truncateBefore(name, 30);
