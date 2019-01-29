@@ -267,13 +267,13 @@ public class Controller2{
 //          if (truncate.containsKey("description") && o.description.length()>Integer.parseInt(truncate.get("description")))
 //            o.description=o.description.substring(0, Integer.parseInt(truncate.get("description"))>o.description.length()?o.description.length():Integer.parseInt(truncate.get("description")))+"...";
           
-          o.relatedProducts.addAll(extractSectionListToDocuments("<[Hh]\\d>(.+?)</[Hh]\\d>", overview.description, new String[]{"PRODUCTS & TRAINING:","Products & Training:", "PRODUCTS USED:"}));
+          o.relatedProducts.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"PRODUCTS & TRAINING:","Products & Training:", "Products &amp; Training:", "PRODUCTS USED:"}));
           
 //          o.relatedProducts.addAll(extractHtmlList(overview, overview.description, new String[]{"PRODUCTS &amp; TRAINING:","Products &amp; Training:", "PRODUCTS USED:"}));
     //      o.relatedSolutions.addAll(extractProducts(overview.description, "RELATED SOLUTIONS:"));
           
-          o.related.addAll(extractSectionListToDocuments("<[Hh]\\d>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
-          o.related.addAll(extractSectionListToDocuments("<[Hh]\\d>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED OFFERINGS:","Related Offerings:"}));
+          o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
+          o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED OFFERINGS:","Related Offerings:"}));
           
           //now, if the overview has a "Related Documents" section, then append those links too
           o.documents.addAll(extractOtherDocuments2(overview, overview.description, new String[]{"OTHER MATERIALS:", "Other Materials:"}));
@@ -639,12 +639,12 @@ public class Controller2{
   private static Pattern LI_ITERATOR_REGEX=Pattern.compile("<[Ll][Ii].*?>(.+?)</[Ll][Ii]>");
   
   private List<Document> extractOtherDocuments2(Document src, String html, String[] tokensInOrder){
-    Matcher m=Pattern.compile("<[Hh]\\d.*>(.+?)</[Hh]\\d>").matcher(html);
+    Matcher m=Pattern.compile("<[Hh]\\d.*?>(.+?)</[Hh]\\d>").matcher(html);
     int sectStart=-1;
     int sectEnd=html.length();
     List<String> tokens=Arrays.asList(tokensInOrder);
     
-    if(m.find()){
+    while(m.find()){
     	for (int i=1;i<=m.groupCount();i++){
         String headerTitle=Jsoup.parse(m.group(i)).text().trim();
         if (tokens.contains(headerTitle)){ // you've found a matching header
@@ -655,16 +655,6 @@ public class Controller2{
     		
     	}
     }
-    
-//    while(m.find()){
-//      String headerTitle=Jsoup.parse(m.group(1)).text().trim();
-//      if (tokens.contains(headerTitle)){ // you've found a matching header
-//        sectStart=m.start(1);
-//        if (m.find())
-//          sectEnd=m.start();
-//        break;
-//      }
-//    }
     
     if (sectStart<0) return new ArrayList<Document>();
     
@@ -818,6 +808,7 @@ public class Controller2{
    */
   private List<Document> extractSectionListToDocuments(String matcher, String html, String[] tokensInOrder){
     Matcher m=Pattern.compile(matcher).matcher(html);
+//    Matcher m=Pattern.compile(matcher, Pattern.DOTALL | Pattern.MULTILINE).matcher(html);
     int sectStart=-1;
     int sectEnd=html.length();
     List<String> tokens=Arrays.asList(tokensInOrder);
