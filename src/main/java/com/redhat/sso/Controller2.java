@@ -212,6 +212,8 @@ public class Controller2{
         if ("program".equalsIgnoreCase(o.type)){
           // get data from sales kit landing pages
         	
+        	System.out.println("loading data from Program: "+overview.name+" - "+overview.getUrl());
+        	
         	o.offering=Jsoup.parse(StrParse.get(overview.name).leftOf("-").trim()).text();
         	o.description=extractDescription4("<span[\\W]*?class=\"description\"[\\W]*?>(.*?)</span>", overview, overview.description);
         	
@@ -483,16 +485,10 @@ public class Controller2{
   private String extractDescription4(String groupRegEx, Document src, String descriptionHtml){
   	// find span with class="description", extract all text within that span
   	
-  	return Jsoup.parse(RegExHelper.extract(descriptionHtml, groupRegEx, 1)).text();
+  	String section=RegExHelper.extract(descriptionHtml, groupRegEx, 1);
+  	if (section==null) return "No Description Found";
   	
-//  	int s=descriptionHtml.indexOf(keyStart);
-//  	s=descriptionHtml.indexOf(">", s+1);
-//  	
-//  	//Matcher m=Pattern.compile("<.*span.*?class=\"description\".*?>(.+?)</span>").matcher(descriptionHtml);
-//  	
-//  	int e=descriptionHtml.indexOf(keyEnd, s);
-//  	String result=descriptionHtml.substring(s+1, e);
-//  	return Jsoup.parse(result).text();
+  	return Jsoup.parse(section).text();
   }
 
   private String extractDescription3(String keyStart, String keyEnd, Document src, String descriptionHtml){
