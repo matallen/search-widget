@@ -208,7 +208,14 @@ public class Controller2{
         
         o.type=extractType(overview);
         
-        // PROGRAM
+        if (o.type==null){
+        	log.debug("PAGE ERROR - no type detected - Page "+overview.name +" -> "+ overview.url);
+        	continue;
+        }
+        
+        // ###############
+        // ### PROGRAM ###
+        // ###############
         if ("program".equalsIgnoreCase(o.type)){
           // get data from sales kit landing pages
         	
