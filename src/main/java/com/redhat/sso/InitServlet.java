@@ -8,7 +8,7 @@ public class InitServlet extends HttpServlet {
 	
   @Override
   public void init(ServletConfig config) throws ServletException {
-    Heartbeat.start(120000l); // 2 mins
+    //Heartbeat.start(120000l); // 2 mins
     super.init(config);
   }
 

@@ -274,12 +274,14 @@ public class Controller2{
         	// get data from overview pages
         	
         	int docTitlePosition=Math.max(overview.name.toLowerCase().indexOf("overview"), overview.name.toLowerCase().indexOf(" page"));
+        	boolean titleOnLeft=false;
           if (overview.name.lastIndexOf("-")>docTitlePosition){
           	o.offering=StrParse.get(overview.name).rightOf("-").trim();
           	overview.name=StrParse.get(overview.name).leftOf("-").trim();
           }else{
           	o.offering=StrParse.get(overview.name).leftOf("-").trim();
           	overview.name=StrParse.get(overview.name).rightOf("-").trim();
+          	titleOnLeft=true;
           }
           
 //          o.offering=StrParse.get(overview.name).rightOf("-").trim();
@@ -300,9 +302,6 @@ public class Controller2{
           o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED SOLUTIONS:","Related Solutions:"}));
           o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"RELATED OFFERINGS:","Related Offerings:"}));
           
-          //now, if the overview has a "Related Documents" section, then append those links too
-          o.documents.addAll(extractOtherDocuments2(overview, overview.description, new String[]{"OTHER MATERIALS:", "Other Materials:"}));
-          
 //          overview.name=StrParse.get(overview.name).leftOf("-").trim();
           overview.description="";
           
@@ -318,7 +317,10 @@ public class Controller2{
           // find the related docs using the groupTag
           for (Document d:alldocuments){
           	if (d.tags.contains(groupTag)){
-          		d.name=StrParse.get(d.name).leftOf("-").trim();
+          		if (titleOnLeft){
+          			d.name=StrParse.get(d.name).rightOf("-").trim();
+          		}else
+          			d.name=StrParse.get(d.name).leftOf("-").trim();
           		d.description="";
           		log.debug("Overview ("+o.offering+"):: Adding (Mojo) document -> ("+d.id+")"+d.name);
           		o.documents.add(d);
@@ -326,6 +328,9 @@ public class Controller2{
           	}
           }
           alldocuments.removeAll(remove); remove.clear();
+          
+          //now, if the overview has a "Related Documents" section, then append those links too
+          o.documents.addAll(extractOtherDocuments2(overview, overview.description, new String[]{"OTHER MATERIALS:", "Other Materials:"}));
         }
           
         log.debug("Overview ("+o.offering+") type="+o.type);
