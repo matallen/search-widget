@@ -54,7 +54,7 @@ public class Controller2{
     System.setProperty("username", IOUtils.toString(new FileInputStream(new File("credentials.txt"))).split("\\n")[0]);
     System.setProperty("password", IOUtils.toString(new FileInputStream(new File("credentials.txt"))).split("\\n")[1]);
     List<Offering> result=new Controller2().search("sso_searchable", "tags,subject,content", "offering_");
-    System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
+//    System.out.println(com.redhat.sso.utils.Json.newObjectMapper(true).writeValueAsString(result));
   }
 
   @GET
@@ -235,8 +235,13 @@ public class Controller2{
         		o.documents.add(overview);
         	}
 //        	overview.name="Sales Kit";
+        	
+        	// based off this page: https://mojo.redhat.com/community/consulting-customer-training/consulting-services-solutions/projects/consulting-solution-container-platforms
+        	o.documents.addAll(extractSectionListToDocuments2(overview.description, "Scoping Definitions.+?</ul>", "<a.*?href=\"(.+?)\">(.+?)</a>", " (Scope)"));
+        	o.documents.addAll(extractSectionListToDocuments2(overview.description, "Task Lists.+?</ul>", "<a.*?href=\"(.+?)\">(.+?)</a>", " (Task List)"));
+        	o.documents.addAll(extractLink(overview.description, "Pricing"));
+        	
         	overview.description="";
-
         }
         
         // ################
@@ -245,6 +250,10 @@ public class Controller2{
         if ("solution".equalsIgnoreCase(o.type)){
         	// get data from sales kit landing pages
         	o.offering=Jsoup.parse(StrParse.get(overview.name).leftOf("-").trim()).text();
+        	
+        	System.out.println("XXX: "+o.offering);
+        	
+        	
         	overview.name="Sales Kit";
         	o.description=extractDescription2(overview, overview.description);
         	o.related.addAll(extractSectionListToDocuments("<[Hh]\\d.*?>(.+?)</[Hh]\\d>", overview.description, new String[]{"OFFERINGS"}));
@@ -681,6 +690,46 @@ public class Controller2{
     return input;
   }
   
+  
+  private String regexExtract(String html, String reducer){
+  	Matcher m1=Pattern.compile(reducer).matcher(html);
+  	if (m1.find()){
+  		return m1.group(0);
+  	}else{
+  		System.out.println(reducer+" not found");
+  		return null;
+  	}
+  }
+  
+  private List<Document> extractSectionListToDocuments2(String html, String reducer, String iterator, String titlePostfix){
+  	List<Document> result=new ArrayList<Document>();
+  	html=regexExtract(html, reducer);
+  	if (null==html) return result;
+  	Matcher m=Pattern.compile(iterator).matcher(html);
+    while (m.find()){
+      String href=m.group(1);
+      String text=m.group(2);
+      String id=text;
+      String description=text;
+      result.add(new Document(id, text+titlePostfix, null, description, href, null));
+    }
+  	return result;
+  }
+  
+  private List<Document> extractLink(String html, String extractor){
+  	List<Document> result=new ArrayList<Document>();
+  	
+    Matcher m=Pattern.compile("<a .+?href=[\\\"'](.+?)[\\\"'].*?>(.+?)</a>").matcher(html);
+    while (m.find()){
+      String href=m.group(1);
+      String text=m.group(2);
+      if (!text.toLowerCase().contains(extractor.toLowerCase())) continue;
+      String id=text;
+      String description=text;
+      result.add(new Document(id, text, null, description, href, null));
+    }
+    return result;
+  }
   
   /**
    * Looks through each header matching the "matcher" regex and tries to find the "tokens" (potential header titles). If it finds on then it looks for the next <ul> and parses that list only 
