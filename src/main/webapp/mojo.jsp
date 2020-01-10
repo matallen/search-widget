@@ -1,7 +1,9 @@
 <html>
-<base target="_parent">
+ <head>
+  <base target="_parent"> 
+ </head>
+ <body>
 <div style="height:800px;">   
-
 <!-- jquery 1.11.3 -->
 <script>
 /*! jQuery v1.11.3 | (c) 2005, 2015 jQuery Foundation, Inc. | jquery.org/license */
@@ -189,15 +191,12 @@ d.trigger("activate.bs.scrollspy")},b.prototype.clear=function(){a(this.selector
 if (window.location.host.includes("localhost")){
 	var baseUrl="http://localhost:8082";
 }else if (window.location.host.includes("-dev.")){
-	var baseUrl="https://search-widget-search-widget-dev.6923.rh-us-east-1.openshiftapps.com";	
+	var baseUrl="https://search-widget-portfolio-hub-dev.6923.rh-us-east-1.openshiftapps.com";	
 }else{
-	var baseUrl="https://search-widget-search-widget.6923.rh-us-east-1.openshiftapps.com";
+	var baseUrl="https://search-widget-portfolio-hub.6923.rh-us-east-1.openshiftapps.com";
 }
 
 console.log("Server = "+baseUrl);
-//var baseUrl="https://search-widget-search-widget.6923.rh-us-east-1.openshiftapps.com";
-//var baseUrl="http://localhost:8082";
-//var baseUrl="https://search-widget-mojo-search-widget.1d35.starter-us-east-1.openshiftapps.com"
 
 
 $(document).ready(function() {
@@ -389,9 +388,9 @@ $(document).ready(function(){
 </style>
 <link rel="stylesheet" type="text/css" href="https://overpass-30e2.kxcdn.com/overpass.css">
 
-<div style="width:98%; height:35px; padding: 13px; background-color: #3b3a3a; text-align: left; vertical-align: middle;">
+<div style="width:98%; height:25px; padding: 8px; background-color: #3b3a3a; text-align: left; vertical-align: middle;">
 	<span style="color: #ffffff; font-family: Overpass, Sans-Serif; font-size: 16pt; ">
-		SOLUTION, OFFERING & PROGRAM SEARCH
+		 Search Solutions, Offerings &amp; Programs 
 	</span>
 </div>
 
@@ -407,16 +406,18 @@ function filter(str){
 
 <div style="position: relative; left: 300px;top:26px;width:900px;">
 	<table style="font-family: overpass">
-		<tr>
-			<td><a href="#" onclick="checkit2('services_program');return false;"><img class="limg" id="legend_program"/></a></td>
-			<td class="program"><a href="#" onclick="checkit2('services_program');return false;">Programs</a></td>
+		<tbody>
+			<tr>
+				<td><a href="#" onclick="checkit2('services_program');return false;"><img class="limg" id="legend_program"/></a></td>
+				<td class="program"><a href="#" onclick="checkit2('services_program');return false;">Programs</a></td>
 
-			<td><a href="#" onclick="checkit2('services_solution');return false;"><img class="limg" id="legend_solution"/></a></td>
-			<td class="solution"><a href="#" onclick="checkit2('services_solution');return false;">Solutions</a></td>
+				<td><a href="#" onclick="checkit2('services_solution');return false;"><img class="limg" id="legend_solution"/></a></td>
+				<td class="solution"><a href="#" onclick="checkit2('services_solution');return false;">Solutions</a></td>
 
-			<td><a href="#" onclick="checkit2('services_offering');return false;"><img class="limg" id="legend_offering"/></a></td>
-			<td class="offering"><a href="#" onclick="checkit2('services_offering');return false;">Offerings</a></td>
-		</tr>
+				<td><a href="#" onclick="checkit2('services_offering');return false;"><img class="limg" id="legend_offering"/></a></td>
+				<td class="offering"><a href="#" onclick="checkit2('services_offering');return false;">Offerings</a></td>
+			</tr>
+		<tbody>
 	</table>
 </div>
 
@@ -522,4 +523,5 @@ function filter(str){
         </style>
         
         </div>
+ </body>
 </html>
