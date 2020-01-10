@@ -241,6 +241,8 @@ public class Controller2{
         	o.documents.addAll(extractSectionListToDocuments2(overview.description, "Task Lists.+?</ul>", "<a.*?href=\"(.+?)\">(.+?)</a>", " (Task List)"));
         	o.documents.addAll(extractLink(overview.description, "Pricing"));
         	
+//        	o.documents.addAll(extractWholeSection(overview.description, "<ul.*? id=\"scope-definitions\">?.*?</ul>?"));
+        	
         	overview.description="";
         }
         
@@ -366,6 +368,10 @@ public class Controller2{
         // re-order the documents in alphabetical order
         Collections.sort(o.documents, new Comparator<Document>(){
           public int compare(Document o1, Document o2){
+          	if ((o1.name.contains("(")) && (o1.name.contains(")")) ||
+          			(o2.name.contains("(")) && (o2.name.contains(")"))){
+          		return o2.name.compareTo(o1.name);
+          	}
             return priority(o1).compareTo(priority(o2));
           }});
         
